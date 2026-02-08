@@ -4,10 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class CertificateApiApplication {
+public class IGCBackendApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(CertificateApiApplication.class, args);
+        SpringApplication.run(IGCBackendApplication.class, args);
     }
 
 }
