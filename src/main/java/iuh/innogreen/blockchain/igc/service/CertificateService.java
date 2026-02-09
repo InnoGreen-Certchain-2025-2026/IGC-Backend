@@ -1,9 +1,9 @@
 package iuh.innogreen.blockchain.igc.service;
 
 
-import iuh.innogreen.blockchain.igc.dto.CertificateRequest;
-import iuh.innogreen.blockchain.igc.dto.CertificateResponse;
-import iuh.innogreen.blockchain.igc.dto.VerifyResponse;
+import iuh.innogreen.blockchain.igc.dto.request.CertificateRequest;
+import iuh.innogreen.blockchain.igc.dto.response.CertificateResponse;
+import iuh.innogreen.blockchain.igc.dto.response.VerifyResponse;
 import iuh.innogreen.blockchain.igc.entity.Certificate;
 import iuh.innogreen.blockchain.igc.repository.CertificateRepository;
 import lombok.RequiredArgsConstructor;

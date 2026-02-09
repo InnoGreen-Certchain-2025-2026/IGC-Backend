@@ -1,4 +1,4 @@
-package iuh.innogreen.blockchain.igc.dto;
+package iuh.innogreen.blockchain.igc.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

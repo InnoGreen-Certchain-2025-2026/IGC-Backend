@@ -1,4 +1,4 @@
-package iuh.innogreen.blockchain.igc.dto;
+package iuh.innogreen.blockchain.igc.dto.request;
 
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
