@@ -1,6 +1,6 @@
 package iuh.innogreen.blockchain.igc.controller;
 
-import iuh.innogreen.blockchain.igc.service.BlockchainService;
+import iuh.innogreen.blockchain.igc.service.core.impl.BlockchainServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,14 +16,14 @@ import java.util.Map;
 @CrossOrigin(origins = "*")
 public class HealthController {
 
-    private final BlockchainService blockchainService;
+    private final BlockchainServiceImpl blockchainServiceImpl;
 
     @GetMapping
     public Map<String, Object> health() {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            var web3j = blockchainService.getWeb3j();
+            var web3j = blockchainServiceImpl.getWeb3j();
             String clientVersion = web3j.web3ClientVersion().send().getWeb3ClientVersion();
             String chainId = web3j.ethChainId().send().getChainId().toString();
             String blockNumber = web3j.ethBlockNumber().send().getBlockNumber().toString();

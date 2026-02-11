@@ -1,5 +1,6 @@
-package iuh.innogreen.blockchain.igc.service;
+package iuh.innogreen.blockchain.igc.service.core.impl;
 
+import iuh.innogreen.blockchain.igc.service.core.BlockchainService;
 import jakarta.annotation.PostConstruct;
 import lombok.Builder;
 import lombok.Data;
@@ -33,7 +34,7 @@ import java.util.List;
 
 @Slf4j
 @Service
-public class BlockchainService {
+public class BlockchainServiceImpl implements BlockchainService {
 
     @Value("${blockchain.rpc-url}")
     private String rpcUrl;
@@ -49,6 +50,7 @@ public class BlockchainService {
     private StaticGasProvider gasProvider;
 
     @PostConstruct
+    @Override
     public void init() {
         log.info("🔗 Initializing Blockchain connection...");
 
@@ -72,6 +74,7 @@ public class BlockchainService {
         }
     }
 
+    @Override
     public TransactionReceipt issueCertificate(String certificateId, String documentHash) {
         try {
             log.info("📝 Issuing certificate: {}", certificateId);
@@ -113,6 +116,7 @@ public class BlockchainService {
         }
     }
 
+    @Override
     public VerificationResult verifyCertificate(String certificateId) {
         try {
             log.info("🔍 Verifying certificate: {}", certificateId);
@@ -173,6 +177,7 @@ public class BlockchainService {
         }
     }
 
+    @Override
     public TransactionReceipt revokeCertificate(String certificateId) {
         try {
             log.info("🚫 Revoking certificate: {}", certificateId);
@@ -254,6 +259,7 @@ public class BlockchainService {
         return sb.toString();
     }
 
+    @Override
     public Ethereum getWeb3j() {
         return web3j;
     }

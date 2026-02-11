@@ -1,4 +1,4 @@
-package iuh.innogreen.blockchain.igc.config;
+package iuh.innogreen.blockchain.igc.config.common;
 
 import org.jspecify.annotations.NonNull;
 import org.springframework.context.annotation.Bean;
@@ -10,11 +10,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.Optional;
 
 /**
- * Admin 2/9/2026
+ * Admin 2/11/2026
  *
  **/
 @Configuration
-public class JpaConfig {
+public class AuditConfig {
 
     @Bean(name = "auditorProvider")
     public AuditorAware<@NonNull String> auditorProvider() {

@@ -1,10 +1,12 @@
-package iuh.innogreen.blockchain.igc.controller;
+package iuh.innogreen.blockchain.igc.controller.core;
 
 import iuh.innogreen.blockchain.igc.dto.request.CertificateRequest;
 import iuh.innogreen.blockchain.igc.dto.response.CertificateResponse;
-import iuh.innogreen.blockchain.igc.service.CertificateService;
+import iuh.innogreen.blockchain.igc.service.core.CertificateService;
 import jakarta.validation.Valid;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,10 +20,11 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/certificates")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class CertificateController {
 
-    private final CertificateService certificateService;
+
+    CertificateService certificateService;
 
     /**
      * Cấp chứng chỉ mới

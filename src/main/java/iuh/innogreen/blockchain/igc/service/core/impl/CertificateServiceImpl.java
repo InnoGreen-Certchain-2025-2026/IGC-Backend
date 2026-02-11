@@ -1,4 +1,4 @@
-package iuh.innogreen.blockchain.igc.service;
+package iuh.innogreen.blockchain.igc.service.core.impl;
 
 
 import iuh.innogreen.blockchain.igc.dto.request.CertificateRequest;
@@ -6,6 +6,7 @@ import iuh.innogreen.blockchain.igc.dto.response.CertificateResponse;
 import iuh.innogreen.blockchain.igc.dto.response.VerifyResponse;
 import iuh.innogreen.blockchain.igc.entity.Certificate;
 import iuh.innogreen.blockchain.igc.repository.CertificateRepository;
+import iuh.innogreen.blockchain.igc.service.core.CertificateService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,10 +22,10 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class CertificateService {
+public class CertificateServiceImpl implements CertificateService {
 
     private final CertificateRepository certificateRepository;
-    private final BlockchainService blockchainService;
+    private final BlockchainServiceImpl blockchainServiceImpl;
 
     @Value("${blockchain.issuer-name}")
     private String issuerName;
@@ -33,6 +34,7 @@ public class CertificateService {
      * Cấp chứng chỉ mới
      */
     @Transactional
+    @Override
     public CertificateResponse issueCertificate(CertificateRequest request) {
         log.info("🎓 Issuing certificate: {}", request.getCertificateId());
 
@@ -66,7 +68,7 @@ public class CertificateService {
             log.info("💾 Saved to database - ID: {}", certificate.getId());
 
             // 3. Ghi lên blockchain
-            TransactionReceipt receipt = blockchainService.issueCertificate(
+            TransactionReceipt receipt = blockchainServiceImpl.issueCertificate(
                     request.getCertificateId(),
                     documentHash
             );
@@ -77,7 +79,7 @@ public class CertificateService {
 
             // Lấy timestamp từ blockchain
             try {
-                var block = blockchainService.getWeb3j().ethGetBlockByNumber(
+                var block = blockchainServiceImpl.getWeb3j().ethGetBlockByNumber(
                         org.web3j.protocol.core.DefaultBlockParameter.valueOf(receipt.getBlockNumber()),
                         false
                 ).send();
@@ -108,6 +110,7 @@ public class CertificateService {
     /**
      * Xác thực chứng chỉ
      */
+    @Override
     public VerifyResponse verifyCertificate(String certificateId) {
         log.info("🔍 Verifying certificate: {}", certificateId);
 
@@ -116,8 +119,8 @@ public class CertificateService {
                 .orElse(null);
 
         // Kiểm tra blockchain
-        BlockchainService.VerificationResult blockchainResult =
-                blockchainService.verifyCertificate(certificateId);
+        BlockchainServiceImpl.VerificationResult blockchainResult =
+                blockchainServiceImpl.verifyCertificate(certificateId);
 
         if (dbCert == null) {
             return VerifyResponse.builder()
@@ -171,6 +174,7 @@ public class CertificateService {
      * Thu hồi chứng chỉ
      */
     @Transactional
+    @Override
     public CertificateResponse revokeCertificate(String certificateId) {
         log.info("🚫 Revoking certificate: {}", certificateId);
 
@@ -182,7 +186,7 @@ public class CertificateService {
         }
 
         // Thu hồi trên blockchain
-        blockchainService.revokeCertificate(certificateId);
+        blockchainServiceImpl.revokeCertificate(certificateId);
 
         // Cập nhật database
         certificate.setIsValid(false);
@@ -196,6 +200,7 @@ public class CertificateService {
     /**
      * Lấy tất cả chứng chỉ
      */
+    @Override
     public List<CertificateResponse> getAllCertificates() {
         log.info("📋 Getting all certificates");
         return certificateRepository.findAll().stream()
@@ -206,6 +211,7 @@ public class CertificateService {
     /**
      * Lấy chứng chỉ theo ID
      */
+    @Override
     public CertificateResponse getCertificateById(String certificateId) {
         log.info("📄 Getting certificate: {}", certificateId);
         Certificate certificate = certificateRepository.findByCertificateId(certificateId)

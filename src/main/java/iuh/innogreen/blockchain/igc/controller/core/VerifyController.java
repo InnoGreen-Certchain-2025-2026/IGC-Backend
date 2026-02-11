@@ -1,8 +1,10 @@
-package iuh.innogreen.blockchain.igc.controller;
+package iuh.innogreen.blockchain.igc.controller.core;
 
 import iuh.innogreen.blockchain.igc.dto.response.VerifyResponse;
-import iuh.innogreen.blockchain.igc.service.CertificateService;
+import iuh.innogreen.blockchain.igc.service.core.CertificateService;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,10 +16,10 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/verify")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class VerifyController {
 
-    private final CertificateService certificateService;
+    CertificateService certificateService;
 
     /**
      * Xác thực chứng chỉ
