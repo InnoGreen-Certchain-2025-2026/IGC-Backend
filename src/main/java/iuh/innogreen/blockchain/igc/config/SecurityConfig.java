@@ -1,5 +1,8 @@
 package iuh.innogreen.blockchain.igc.config;
 
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,10 +19,30 @@ import java.util.Arrays;
 import java.util.List;
 
 @Configuration
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class SecurityConfig {
 
     @Value("${security.cors.allowed-origins}")
-    private String allowedOrigins;
+    @NonFinal
+    String allowedOrigins;
+
+    static final String[] WHITELIST = {
+            
+            // Authentication
+            "/auth/login",
+            "/auth/mobile/login",
+            "/auth/logout",
+            "/auth/register",
+            "/auth/refresh",
+
+            // OTP
+            "/otp/send",
+            "/otp/verify",
+
+            // Health check
+            "/actuator/health",
+
+    };
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) {
