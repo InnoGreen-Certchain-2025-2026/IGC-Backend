@@ -1,76 +1,69 @@
 package iuh.innogreen.blockchain.igc.entity;
 
+import iuh.innogreen.blockchain.igc.entity.base.BaseEntity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "certificates")
-@Data
-@Builder
-@NoArgsConstructor
 @AllArgsConstructor
-public class Certificate {
+@NoArgsConstructor
+@Getter
+@Setter
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class Certificate extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    Long id;
 
     @Column(name = "certificate_id", unique = true, nullable = false)
-    private String certificateId;
+    String certificateId;
 
     @Column(name = "student_name", nullable = false)
-    private String studentName;
+    String studentName;
 
     @Column(name = "student_id", nullable = false)
-    private String studentId;
+    String studentId;
 
     @Column(name = "date_of_birth")
-    private LocalDate dateOfBirth;
+    LocalDate dateOfBirth;
 
     @Column(name = "major")
-    private String major;
+    String major;
 
     @Column(name = "graduation_year")
-    private Integer graduationYear;
+    Integer graduationYear;
 
     @Column(name = "gpa")
-    private Double gpa;
+    Double gpa;
 
     @Column(name = "certificate_type")
-    private String certificateType;
+    String certificateType;
 
     @Column(name = "issuer", nullable = false)
-    private String issuer;
+    String issuer;
 
     @Column(name = "issue_date")
-    private LocalDate issueDate;
+    LocalDate issueDate;
 
     @Column(name = "document_hash", nullable = false, unique = true, length = 66)
-    private String documentHash;
+    String documentHash;
 
     @Column(name = "blockchain_tx_hash", length = 66)
-    private String blockchainTxHash;
+    String blockchainTxHash;
 
     @Column(name = "blockchain_block_number")
-    private Long blockchainBlockNumber;
+    Long blockchainBlockNumber;
 
     @Column(name = "blockchain_timestamp")
-    private Long blockchainTimestamp;
+    Long blockchainTimestamp;
 
     @Column(name = "is_valid")
-    private Boolean isValid = true;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
+    Boolean isValid = true;
 }
