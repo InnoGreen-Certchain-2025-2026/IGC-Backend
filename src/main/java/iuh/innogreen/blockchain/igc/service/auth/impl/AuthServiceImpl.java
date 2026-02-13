@@ -2,7 +2,7 @@ package iuh.innogreen.blockchain.igc.service.auth.impl;
 
 import iuh.innogreen.blockchain.igc.dto.request.auth.LoginRequest;
 import iuh.innogreen.blockchain.igc.dto.request.auth.RegisterRequest;
-import iuh.innogreen.blockchain.igc.dto.response.auth.UserSessionResponse;
+import iuh.innogreen.blockchain.igc.dto.response.user.UserSessionResponse;
 import iuh.innogreen.blockchain.igc.entity.User;
 import iuh.innogreen.blockchain.igc.repository.UserRepository;
 import iuh.innogreen.blockchain.igc.service.auth.JWTService;

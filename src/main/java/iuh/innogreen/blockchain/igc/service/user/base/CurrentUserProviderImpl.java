@@ -1,4 +1,4 @@
-package iuh.innogreen.blockchain.igc.service.user.impl;
+package iuh.innogreen.blockchain.igc.service.user.base;
 
 import iuh.innogreen.blockchain.igc.entity.User;
 import iuh.innogreen.blockchain.igc.repository.UserRepository;

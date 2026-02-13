@@ -1,6 +1,6 @@
 package iuh.innogreen.blockchain.igc.service.auth.model;
 
-import iuh.innogreen.blockchain.igc.dto.response.auth.UserSessionResponse;
+import iuh.innogreen.blockchain.igc.dto.response.user.UserSessionResponse;
 import lombok.Builder;
 import org.springframework.http.ResponseCookie;
 

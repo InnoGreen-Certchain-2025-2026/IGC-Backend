@@ -26,8 +26,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     AuthService authService;
-
-
+    
     @PostMapping("/register")
     public ApiResponse<Void> register(
             @RequestBody @Valid RegisterRequest registerRequest
