@@ -1,6 +1,6 @@
 spring:
   application:
-    name: certificate-blockchain-api
+    name: igc-backend
 
   datasource:
     url: ${DB_URL}
