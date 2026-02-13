@@ -2,7 +2,6 @@ package iuh.innogreen.blockchain.igc.service.auth;
 
 import iuh.innogreen.blockchain.igc.dto.request.auth.LoginRequest;
 import iuh.innogreen.blockchain.igc.dto.request.auth.RegisterRequest;
-import iuh.innogreen.blockchain.igc.dto.response.auth.UserSessionResponse;
 import iuh.innogreen.blockchain.igc.service.auth.model.AuthResultWrapper;
 import org.springframework.http.ResponseCookie;
 

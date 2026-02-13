@@ -1,13 +1,12 @@
 package iuh.innogreen.blockchain.igc.controller.user;
 
 import iuh.innogreen.blockchain.igc.dto.base.ApiResponse;
-import iuh.innogreen.blockchain.igc.dto.response.auth.UserSessionResponse;
+import iuh.innogreen.blockchain.igc.dto.response.user.UserSessionResponse;
 import iuh.innogreen.blockchain.igc.service.user.UserService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.jspecify.annotations.NonNull;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
