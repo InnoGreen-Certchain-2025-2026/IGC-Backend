@@ -1,15 +1,15 @@
 package iuh.innogreen.blockchain.igc.controller.user;
 
 import iuh.innogreen.blockchain.igc.dto.base.ApiResponse;
+import iuh.innogreen.blockchain.igc.dto.request.user.UpdateProfileRequest;
+import iuh.innogreen.blockchain.igc.dto.response.user.UserProfileResponse;
 import iuh.innogreen.blockchain.igc.dto.response.user.UserSessionResponse;
 import iuh.innogreen.blockchain.igc.service.user.UserService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.jspecify.annotations.NonNull;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * Admin 2/13/2026
@@ -28,4 +28,17 @@ public class UserController {
         return new ApiResponse<>(userService.getUserSession());
     }
 
+    @GetMapping("/me/profile")
+    public ApiResponse<@NonNull UserProfileResponse> getUserProfile() {
+        return new ApiResponse<>(userService.getUserProfile());
+    }
+
+    @PostMapping("/me/profile")
+    public ApiResponse<@NonNull Void> updateUserProfile(
+            @RequestBody
+            UpdateProfileRequest updateProfileRequest
+    ) {
+        userService.updateUserProfile(updateProfileRequest);
+        return ApiResponse.<Void>builder().build();
+    }
 }
