@@ -2,8 +2,10 @@ package iuh.innogreen.blockchain.igc.service.auth;
 
 import iuh.innogreen.blockchain.igc.dto.request.auth.LoginRequest;
 import iuh.innogreen.blockchain.igc.dto.request.auth.RegisterRequest;
+import iuh.innogreen.blockchain.igc.dto.request.user.UpdatePasswordRequest;
 import iuh.innogreen.blockchain.igc.service.auth.model.AuthResultWrapper;
 import org.springframework.http.ResponseCookie;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Admin 2/13/2026
@@ -19,4 +21,7 @@ public interface AuthService {
     AuthResultWrapper refreshSession(
             String refreshToken
     );
+
+    @Transactional
+    void updatePassword(UpdatePasswordRequest updatePasswordRequest);
 }

@@ -9,10 +9,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.jspecify.annotations.NonNull;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * Admin 2/13/2026
@@ -37,9 +34,11 @@ public class UserController {
     }
 
     @PostMapping("/me/profile")
-    public ApiResponse<@NonNull Void> updateUserProfile(UpdateProfileRequest updateProfileRequest) {
+    public ApiResponse<@NonNull Void> updateUserProfile(
+            @RequestBody
+            UpdateProfileRequest updateProfileRequest
+    ) {
         userService.updateUserProfile(updateProfileRequest);
-
-
+        return ApiResponse.<Void>builder().build();
     }
 }
