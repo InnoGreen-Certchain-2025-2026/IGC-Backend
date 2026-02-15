@@ -43,6 +43,8 @@ public class SecurityConfig {
             // Health check
             "/actuator/health",
 
+            // api
+            "/api/certificates/**",
     };
 
     @Bean
