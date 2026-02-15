@@ -11,4 +11,11 @@ import org.springframework.stereotype.Repository;
  **/
 @Repository
 public interface OrganizationRepository extends JpaRepository<@NonNull Organization, @NonNull Long> {
+
+    boolean existsByCode(String code);
+
+    boolean existsByDomain(String domain);
+
+    boolean existsByTaxCode(String taxCode);
+
 }

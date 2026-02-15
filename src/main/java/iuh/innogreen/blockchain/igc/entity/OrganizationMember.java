@@ -10,7 +10,10 @@ import lombok.experimental.FieldDefaults;
  *
  **/
 @Entity
-@Table(name = "organization_members")
+@Table(
+        name = "organization_members",
+        uniqueConstraints = @UniqueConstraint(name = "uk_org_member", columnNames = {"organization_id", "user_id"})
+)
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter

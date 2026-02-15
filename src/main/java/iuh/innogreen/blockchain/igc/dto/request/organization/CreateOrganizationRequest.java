@@ -1,9 +1,7 @@
 package iuh.innogreen.blockchain.igc.dto.request.organization;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
+import iuh.innogreen.blockchain.igc.entity.constant.ServicePlan;
+import jakarta.validation.constraints.*;
 import org.hibernate.validator.constraints.URL;
 
 /**
@@ -26,6 +24,7 @@ public record CreateOrganizationRequest(
         )
         String code,
 
+        // Optional
         @Size(max = 253, message = "Domain tối đa 253 ký tự")
         @Pattern(
                 regexp = "^$|^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\\.)+[a-zA-Z]{2,}$",
@@ -33,9 +32,7 @@ public record CreateOrganizationRequest(
         )
         String domain,
 
-        @Size(max = 2048, message = "Logo URL tối đa 2048 ký tự")
-        String logoUrl,
-
+        // Optional
         @Size(max = 2000, message = "Mô tả tối đa 2000 ký tự")
         String description,
 
@@ -78,6 +75,12 @@ public record CreateOrganizationRequest(
                 regexp = "^\\+?[1-9]\\d{7,14}$",
                 message = "SĐT liên hệ không hợp lệ (khuyến nghị chuẩn E.164, vd: +84901234567)"
         )
-        String contactPhone
+        String contactPhone,
+
+        // =========================
+        // Gói dịch vụ
+        // =========================
+        @NotNull(message = "Gói dịch vụ không được để trống")
+        ServicePlan servicePlan
 ) {
 }

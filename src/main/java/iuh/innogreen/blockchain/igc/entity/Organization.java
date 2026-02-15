@@ -107,6 +107,7 @@ public class Organization extends BaseEntity {
      **/
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
     ServicePlan servicePlan;
 
 
