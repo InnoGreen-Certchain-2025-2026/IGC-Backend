@@ -43,6 +43,9 @@ public class SecurityConfig {
             // Health check
             "/actuator/health",
 
+            // Upload
+            "/api/v1/upload/**"
+
     };
 
     @Bean

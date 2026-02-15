@@ -16,7 +16,12 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
-
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          model: ${OPENAI_CHAT_MODEL}
 server:
   port: 8080
 
@@ -38,6 +43,14 @@ security:
     same-site: "None"
     secure: "true"
     refresh-token-name: "refresh_token"
+
+aws:
+  access-key: ${AWS_ACCESS_KEY}
+  secret-key: ${AWS_SECRET_KEY}
+  s3:
+    bucket-name: ${AWS_BUCKET_NAME}
+    domain: ${AWS_DOMAIN}
+    region: ${AWS_REGION}
 
 logging:
   level:
