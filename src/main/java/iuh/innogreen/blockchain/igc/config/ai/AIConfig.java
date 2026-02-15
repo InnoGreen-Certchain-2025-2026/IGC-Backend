@@ -11,4 +11,5 @@ public class AIConfig {
     public ChatClient chatClient(ChatClient.Builder builder) {
         return builder.build();
     }
+
 }

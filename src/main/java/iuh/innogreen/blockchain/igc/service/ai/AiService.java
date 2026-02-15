@@ -7,5 +7,5 @@ import java.io.InputStream;
 
 public interface AiService {
 
-    FileResponse extract(MultipartFile file);
+    FileResponse extract(InputStream inputStream,MultipartFile file);
 }

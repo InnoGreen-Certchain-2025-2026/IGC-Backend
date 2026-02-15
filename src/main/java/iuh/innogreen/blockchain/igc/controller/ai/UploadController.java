@@ -21,26 +21,18 @@ import java.io.InputStream;
 public class UploadController {
     private final AiService aiService;
 
-//    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-//    public ResponseEntity<?> extract (
-//            @RequestParam("file") MultipartFile file){
-//
-//        try(InputStream inputStream = file.getInputStream()){
-//            FileResponse response = aiService.extract(inputStream,file);
-//            return ResponseEntity.ok(response);
-//        }catch (IOException e){
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error uploading image");
-//        }
-//    }
-
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<FileResponse> extract(
-            @RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> extract (
+            @RequestParam("file") MultipartFile file){
 
-        log.info("Received file: {}", file.getOriginalFilename());
-        FileResponse response = aiService.extract(file);
-        return ResponseEntity.ok(response);
+        try(InputStream inputStream = file.getInputStream()){
+            FileResponse response = aiService.extract(inputStream,file);
+            return ResponseEntity.ok(response);
+        }catch (IOException e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error uploading image");
+        }
     }
+
 
 
 }
