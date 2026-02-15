@@ -2,6 +2,7 @@ package iuh.innogreen.blockchain.igc.service.auth.impl;
 
 import iuh.innogreen.blockchain.igc.dto.request.auth.LoginRequest;
 import iuh.innogreen.blockchain.igc.dto.request.auth.RegisterRequest;
+import iuh.innogreen.blockchain.igc.dto.request.user.UpdatePasswordRequest;
 import iuh.innogreen.blockchain.igc.dto.response.user.UserSessionResponse;
 import iuh.innogreen.blockchain.igc.entity.User;
 import iuh.innogreen.blockchain.igc.repository.UserRepository;
@@ -29,7 +30,6 @@ import org.springframework.transaction.annotation.Transactional;
  **/
 @Service
 @RequiredArgsConstructor
-@Transactional
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthServiceImpl implements iuh.innogreen.blockchain.igc.service.auth.AuthService {
 
@@ -63,6 +63,7 @@ public class AuthServiceImpl implements iuh.innogreen.blockchain.igc.service.aut
     String REFRESH_TOKEN_COOKIE_NAME;
 
     @Override
+    @Transactional
     public void register(RegisterRequest request) {
 
         if (userRepository.existsByEmail(request.email()))
@@ -72,9 +73,11 @@ public class AuthServiceImpl implements iuh.innogreen.blockchain.igc.service.aut
                 .builder()
                 .email(request.email().toLowerCase())
                 .name(request.name())
+                .phoneNumber(request.phoneNumber())
+                .address(request.address())
+                .dob(request.dob())
+                .gender(request.gender())
                 .hashedPassword(passwordEncoder.encode(request.password()))
-                .address(request.address() != null && !request.address().isBlank() ? request.address() : null)
-                .dob(request.dob() != null ? request.dob() : null)
                 .build();
 
         userRepository.save(user);
@@ -95,13 +98,6 @@ public class AuthServiceImpl implements iuh.innogreen.blockchain.igc.service.aut
 
     @Override
     public ResponseCookie logout(String refreshToken) {
-        if (refreshToken != null) {
-            String email = jwtService.decodeJwt(refreshToken).getSubject();
-            var refreshTokenUser = userRepository
-                    .findByEmail(email)
-                    .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng"));
-        }
-
         return ResponseCookie
                 .from(REFRESH_TOKEN_COOKIE_NAME, "")
                 .httpOnly(true)
@@ -122,6 +118,27 @@ public class AuthServiceImpl implements iuh.innogreen.blockchain.igc.service.aut
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng"));
 
         return buildAuthResultWrapper(refreshTokenUser);
+    }
+
+    @Transactional
+    @Override
+    public void updatePassword(UpdatePasswordRequest updatePasswordRequest) {
+
+        User user = currentUserProvider.get();
+        String hashedPassword = user.getHashedPassword();
+
+        if (!passwordEncoder.matches(updatePasswordRequest.oldPassword(), hashedPassword))
+            throw new DataIntegrityViolationException("Mật khẩu hiện tại không đúng");
+
+        String newPassword = updatePasswordRequest.newPassword();
+        String confirmedNewPassword = updatePasswordRequest.newPassword();
+
+
+        if (!newPassword.equalsIgnoreCase(confirmedNewPassword))
+            throw new DataIntegrityViolationException("Mật khẩu nhập lại không trùng");
+
+        String hashedNewPassword = passwordEncoder.encode(newPassword);
+        user.setHashedPassword(hashedNewPassword);
     }
 
     // =====================================

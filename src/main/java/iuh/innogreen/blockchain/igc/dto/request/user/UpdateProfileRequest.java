@@ -1,19 +1,20 @@
-package iuh.innogreen.blockchain.igc.dto.request.auth;
+package iuh.innogreen.blockchain.igc.dto.request.user;
 
 import iuh.innogreen.blockchain.igc.entity.constant.Gender;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Past;
+import jakarta.validation.constraints.Pattern;
+import lombok.Builder;
 
 import java.time.LocalDate;
 
 /**
- * Admin 2/13/2026
+ * Admin 2/14/2026
  *
  **/
-public record RegisterRequest(
-        @NotBlank(message = "Email người dùng không được để trống")
-        @Email(message = "Định dạng email không hợp lệ")
-        String email,
-
+@Builder
+public record UpdateProfileRequest(
         @NotBlank(message = "Tên người dùng không được để trống")
         String name,
 
@@ -29,9 +30,6 @@ public record RegisterRequest(
         LocalDate dob,
 
         @NotNull(message = "Giới tính không được để trống")
-        Gender gender,
-
-        @NotBlank(message = "Mật khẩu không được để trống")
-        String password
+        Gender gender
 ) {
 }

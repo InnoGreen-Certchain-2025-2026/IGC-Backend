@@ -3,6 +3,7 @@ package iuh.innogreen.blockchain.igc.controller.auth;
 import iuh.innogreen.blockchain.igc.dto.base.ApiResponse;
 import iuh.innogreen.blockchain.igc.dto.request.auth.LoginRequest;
 import iuh.innogreen.blockchain.igc.dto.request.auth.RegisterRequest;
+import iuh.innogreen.blockchain.igc.dto.request.user.UpdatePasswordRequest;
 import iuh.innogreen.blockchain.igc.dto.response.auth.DefaultAuthResponse;
 import iuh.innogreen.blockchain.igc.service.auth.AuthService;
 import jakarta.validation.Valid;
@@ -26,7 +27,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     AuthService authService;
-    
+
     @PostMapping("/register")
     public ApiResponse<Void> register(
             @RequestBody @Valid RegisterRequest registerRequest
@@ -76,5 +77,15 @@ public class AuthController {
                 .header(HttpHeaders.SET_COOKIE, authResultWrapper.refreshTokenCookie().toString())
                 .body(new ApiResponse<>(payload));
     }
+
+    @PostMapping("/password")
+    public ApiResponse<@NonNull Void> updatePassword(
+            @RequestBody
+            UpdatePasswordRequest updatePasswordRequest
+    ) {
+        authService.updatePassword(updatePasswordRequest);
+        return ApiResponse.<Void>builder().build();
+    }
+
 
 }
