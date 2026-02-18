@@ -40,7 +40,7 @@ jobs:
           {
             "AWSEBDockerrunVersion": "1",
             "Image": {
-              "Name": "${{ secrets.DOCKER_USERNAME }}/pingme-core-service:latest",
+              "Name": "${{ secrets.DOCKER_USERNAME }}/igc-backend:latest",
               "Update": "true"
             },
             "Ports": [
