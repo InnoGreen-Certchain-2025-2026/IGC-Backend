@@ -6,6 +6,7 @@ import iuh.innogreen.blockchain.igc.dto.request.organization.CreateOrganizationR
 import iuh.innogreen.blockchain.igc.dto.response.orginazation.OrganizationResponse;
 import iuh.innogreen.blockchain.igc.dto.response.orginazation.OrganizationSummaryResponse;
 import iuh.innogreen.blockchain.igc.service.organization.OrganizationService;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -33,7 +34,7 @@ public class OrganizationController {
 
     @PostMapping
     public ApiResponse<@NonNull Void> createOrganization(
-            @RequestPart("data") CreateOrganizationRequest createOrganizationRequest,
+            @RequestPart("data") @Valid CreateOrganizationRequest createOrganizationRequest,
             @RequestPart("logo") MultipartFile logo
     ) {
         organizationService.createOrganization(createOrganizationRequest, logo);
