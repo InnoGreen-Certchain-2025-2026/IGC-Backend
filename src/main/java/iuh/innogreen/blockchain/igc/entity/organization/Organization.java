@@ -1,10 +1,12 @@
-package iuh.innogreen.blockchain.igc.entity;
+package iuh.innogreen.blockchain.igc.entity.organization;
 
 import iuh.innogreen.blockchain.igc.entity.base.BaseEntity;
 import iuh.innogreen.blockchain.igc.entity.constant.ServicePlan;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+
+import java.util.List;
 
 /**
  * Admin 2/15/2026
@@ -33,7 +35,7 @@ public class Organization extends BaseEntity {
 
     /**
      * =============================================
-     * THÔNG TIN CHUNG.
+     * THÔNG TIN CHUNG
      * =============================================
      **/
 
@@ -72,21 +74,6 @@ public class Organization extends BaseEntity {
 
     /**
      * =============================================
-     * THÔNG TIN PHÁT HÀNH / KÝ
-     * =============================================
-     **/
-
-    @Column(nullable = false)
-    String blockchainContractAddress;
-
-    @Column(nullable = false)
-    String blockchainAdminAddress;
-
-    @Column(nullable = false)
-    String chainId;
-
-    /**
-     * =============================================
      * THÔNG TIN LIÊN HỆ
      * =============================================
      **/
@@ -109,6 +96,15 @@ public class Organization extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     ServicePlan servicePlan;
+
+    /**
+     * =============================================
+     * Mối quan hệ ràng buộc
+     * =============================================
+     **/
+
+    @OneToMany(mappedBy = "organization", fetch = FetchType.LAZY)
+    List<OrganizationMember> organizationMembers;
 
 
 }

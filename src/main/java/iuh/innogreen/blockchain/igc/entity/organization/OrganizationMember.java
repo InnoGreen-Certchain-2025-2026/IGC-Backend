@@ -1,5 +1,7 @@
-package iuh.innogreen.blockchain.igc.entity;
+package iuh.innogreen.blockchain.igc.entity.organization;
 
+import iuh.innogreen.blockchain.igc.entity.User;
+import iuh.innogreen.blockchain.igc.entity.base.BaseEntity;
 import iuh.innogreen.blockchain.igc.entity.constant.OrganizationRole;
 import jakarta.persistence.*;
 import lombok.*;
@@ -20,7 +22,7 @@ import lombok.experimental.FieldDefaults;
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
-public class OrganizationMember {
+public class OrganizationMember extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

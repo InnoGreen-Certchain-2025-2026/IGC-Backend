@@ -1,6 +1,6 @@
 package iuh.innogreen.blockchain.igc.repository;
 
-import iuh.innogreen.blockchain.igc.entity.OrganizationMember;
+import iuh.innogreen.blockchain.igc.entity.organization.OrganizationMember;
 import org.jspecify.annotations.NonNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
