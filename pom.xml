@@ -11,7 +11,7 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.certificate.blockchain</groupId>
+    <groupId>iuh.igc</groupId>
     <artifactId>igc-backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>IGC-Backend</name>
