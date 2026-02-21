@@ -75,11 +75,6 @@ public class OrganizationServiceImpl implements OrganizationService {
         organization.setContactEmail(request.contactEmail());
         organization.setContactPhone(request.contactPhone());
 
-        // Set thông tin phát hành/ ký
-        organization.setBlockchainContractAddress("1");
-        organization.setBlockchainAdminAddress("1");
-        organization.setChainId("1");
-
         // Set gói dịch vụ
         organization.setServicePlan(request.servicePlan());
 

@@ -1,22 +1,34 @@
 package iuh.innogreen.blockchain.igc.dto.response.core;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class VerifyResponse {
+public record VerifyResponse(
+        @JsonProperty("exists")
+        boolean exists,
 
-    private boolean exists;
-    private boolean valid;
-    private String certificateId;
-    private String studentName;
-    private String issuer;
-    private Long issueTimestamp;
-    private String documentHash;
-    private String message;
-}
+        @JsonProperty("valid")
+        boolean valid,
+
+        @JsonProperty("certificateId")
+        String certificateId,
+
+        @JsonProperty("studentName")
+        String studentName,
+
+        @JsonProperty("issuer")
+        String issuer,
+
+        @JsonProperty("issueTimestamp")
+        Long issueTimestamp,
+
+        @JsonProperty("documentHash")
+        String documentHash,
+
+        @JsonProperty("message")
+        String message
+) { }

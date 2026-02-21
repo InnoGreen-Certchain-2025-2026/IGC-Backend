@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
 import java.nio.charset.StandardCharsets;
@@ -32,15 +33,19 @@ public class CertificateServiceImpl implements CertificateService {
 
     /**
      * Cấp chứng chỉ mới
+     * * Thay certicateRequest bằng 1 file PDF upload lên,
+     * * sau đó đọc nội dung file để tạo hash và lưu vào blockchain,
+     * *
+     * *
      */
     @Transactional
     @Override
     public CertificateResponse issueCertificate(CertificateRequest request) {
-        log.info("🎓 Issuing certificate: {}", request.getCertificateId());
+        log.info("🎓 Issuing certificate: {}", request.certificateId());
 
         // Kiểm tra trùng lặp
-        if (certificateRepository.existsByCertificateId(request.getCertificateId())) {
-            throw new RuntimeException("Certificate ID already exists: " + request.getCertificateId());
+        if (certificateRepository.existsByCertificateId(request.certificateId())) {
+            throw new RuntimeException("Certificate ID already exists: " + request.certificateId());
         }
 
         try {
@@ -50,16 +55,16 @@ public class CertificateServiceImpl implements CertificateService {
 
             // 2. Lưu vào database
             Certificate certificate = Certificate.builder()
-                    .certificateId(request.getCertificateId())
-                    .studentName(request.getStudentName())
-                    .studentId(request.getStudentId())
-                    .dateOfBirth(request.getDateOfBirth())
-                    .major(request.getMajor())
-                    .graduationYear(request.getGraduationYear())
-                    .gpa(request.getGpa())
-                    .certificateType(request.getCertificateType())
+                    .certificateId(request.certificateId())
+                    .studentName(request.studentName())
+                    .studentId(request.studentId())
+                    .dateOfBirth(request.dateOfBirth())
+                    .major(request.major())
+                    .graduationYear(request.graduationYear())
+                    .gpa(request.gpa())
+                    .certificateType(request.certificateType())
                     .issuer(issuerName)
-                    .issueDate(request.getIssueDate())
+                    .issueDate(request.issueDate())
                     .documentHash(documentHash)
                     .isValid(true)
                     .build();
@@ -69,7 +74,7 @@ public class CertificateServiceImpl implements CertificateService {
 
             // 3. Ghi lên blockchain
             TransactionReceipt receipt = blockchainServiceImpl.issueCertificate(
-                    request.getCertificateId(),
+                    request.certificateId(),
                     documentHash
             );
 
@@ -80,7 +85,7 @@ public class CertificateServiceImpl implements CertificateService {
             // Lấy timestamp từ blockchain
             try {
                 var block = blockchainServiceImpl.getWeb3j().ethGetBlockByNumber(
-                        org.web3j.protocol.core.DefaultBlockParameter.valueOf(receipt.getBlockNumber()),
+                        DefaultBlockParameter.valueOf(receipt.getBlockNumber()),
                         false
                 ).send();
 
@@ -108,7 +113,8 @@ public class CertificateServiceImpl implements CertificateService {
     }
 
     /**
-     * Xác thực chứng chỉ
+     * Xác thực chứng chỉ, hiện tại là lấy thông tin từ database và blockchain để so sánh
+     * Update: kiểm tra từ 1 file PDF được upload lên, tạo hash và so sánh với hash lưu trên blockchain để phát hiện giả mạo
      */
     @Override
     public VerifyResponse verifyCertificate(String certificateId) {
@@ -225,15 +231,15 @@ public class CertificateServiceImpl implements CertificateService {
     private String generateDocumentHash(CertificateRequest request) {
         try {
             String data = String.format("%s|%s|%s|%s|%s|%s|%s|%s|%s",
-                    request.getCertificateId(),
-                    request.getStudentName(),
-                    request.getStudentId(),
-                    request.getDateOfBirth(),
-                    request.getMajor(),
-                    request.getGraduationYear(),
-                    request.getGpa(),
-                    request.getCertificateType(),
-                    request.getIssueDate()
+                    request.certificateId(),
+                    request.studentName(),
+                    request.studentId(),
+                    request.dateOfBirth(),
+                    request.major(),
+                    request.graduationYear(),
+                    request.gpa(),
+                    request.certificateType(),
+                    request.issueDate()
             );
 
             MessageDigest digest = MessageDigest.getInstance("SHA-256");

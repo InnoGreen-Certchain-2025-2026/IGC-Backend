@@ -33,7 +33,7 @@ public class CertificateController {
     @PostMapping
     public ResponseEntity<?> issueCertificate(@Valid @RequestBody CertificateRequest request) {
         try {
-            log.info("📥 Received request to issue certificate: {}", request.getCertificateId());
+            log.info("📥 Received request to issue certificate: {}", request.certificateId());
             CertificateResponse response = certificateService.issueCertificate(request);
 
             Map<String, Object> result = new HashMap<>();

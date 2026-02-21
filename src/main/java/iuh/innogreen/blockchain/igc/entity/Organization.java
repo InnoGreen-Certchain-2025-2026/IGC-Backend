@@ -72,21 +72,6 @@ public class Organization extends BaseEntity {
 
     /**
      * =============================================
-     * THÔNG TIN PHÁT HÀNH / KÝ
-     * =============================================
-     **/
-
-    @Column(nullable = false)
-    String blockchainContractAddress;
-
-    @Column(nullable = false)
-    String blockchainAdminAddress;
-
-    @Column(nullable = false)
-    String chainId;
-
-    /**
-     * =============================================
      * THÔNG TIN LIÊN HỆ
      * =============================================
      **/
