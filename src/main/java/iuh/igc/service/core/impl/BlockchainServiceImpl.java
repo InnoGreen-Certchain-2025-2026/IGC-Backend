@@ -19,7 +19,6 @@ import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
-import org.web3j.protocol.core.Ethereum;
 import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.EthCall;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
@@ -117,7 +116,7 @@ public class BlockchainServiceImpl implements BlockchainService {
     }
 
     @Override
-    public VerificationResult verifyCertificate(String certificateId) {
+    public BlockchainService.VerificationResult verifyCertificate(String certificateId) {
         try {
             log.info("🔍 Verifying certificate: {}", certificateId);
 
@@ -125,14 +124,10 @@ public class BlockchainServiceImpl implements BlockchainService {
                     "verifyCertificate",
                     Arrays.asList(new Utf8String(certificateId)),
                     Arrays.asList(
-                            new TypeReference<Utf8String>() {
-                            },
-                            new TypeReference<Bytes32>() {
-                            },
-                            new TypeReference<Uint256>() {
-                            },
-                            new TypeReference<Bool>() {
-                            }
+                            new TypeReference<Utf8String>() {},
+                            new TypeReference<Bytes32>() {},
+                            new TypeReference<Uint256>() {},
+                            new TypeReference<Bool>() {}
                     )
             );
 
@@ -161,7 +156,7 @@ public class BlockchainServiceImpl implements BlockchainService {
 
             log.info("✅ Verified - Valid: {}", isValid);
 
-            return VerificationResult.builder()
+            return VerificationResultImpl.builder()
                     .certificateId(certId)
                     .documentHash(hash)
                     .issueTimestamp(timestamp.longValue())
@@ -170,7 +165,7 @@ public class BlockchainServiceImpl implements BlockchainService {
 
         } catch (Exception e) {
             log.error("❌ Verification failed", e);
-            return VerificationResult.builder()
+            return VerificationResultImpl.builder()
                     .certificateId(certificateId)
                     .isValid(false)
                     .build();
@@ -204,6 +199,11 @@ public class BlockchainServiceImpl implements BlockchainService {
             log.error("❌ Revocation failed", e);
             throw new RuntimeException("Failed to revoke certificate", e);
         }
+    }
+
+    @Override
+    public Web3j getWeb3j() {
+        return web3j;
     }
 
     private String createSignedTransaction(String encodedFunction) throws Exception {
@@ -259,14 +259,12 @@ public class BlockchainServiceImpl implements BlockchainService {
         return sb.toString();
     }
 
-    @Override
-    public Ethereum getWeb3j() {
-        return web3j;
-    }
-
+    /**
+     * Implementation của VerificationResult
+     */
     @Data
     @Builder
-    public static class VerificationResult {
+    public static class VerificationResultImpl implements BlockchainService.VerificationResult {
         private String certificateId;
         private String documentHash;
         private Long issueTimestamp;

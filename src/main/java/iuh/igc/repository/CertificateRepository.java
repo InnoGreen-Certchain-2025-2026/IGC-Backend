@@ -12,7 +12,7 @@ public interface CertificateRepository extends JpaRepository<@NonNull Certificat
 
     Optional<Certificate> findByCertificateId(String certificateId);
 
-    Optional<Certificate> findByDocumentHash(String documentHash);
+    Optional<Certificate> findBySignedPdfHash(String signedPdfHash);
 
     boolean existsByCertificateId(String certificateId);
 }

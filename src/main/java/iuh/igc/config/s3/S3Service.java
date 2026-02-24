@@ -10,10 +10,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.ResponseBytes;
+import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.InputStream;
 import java.util.Objects;
@@ -136,6 +137,87 @@ public class S3Service {
         }
         return folderName + "/" + fileName;
 
+    }
+
+    /**
+     * Download file as byte array từ S3
+     * @param key S3 object key (path)
+     * @return byte array của file
+     */
+    public byte[] downloadFileAsBytes(String key) {
+        try {
+            GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                    .bucket(awsBucketName)
+                    .key(key)
+                    .build();
+
+            ResponseBytes<GetObjectResponse> objectBytes = s3Client.getObjectAsBytes(getObjectRequest);
+            byte[] data = objectBytes.asByteArray();
+
+            return data;
+
+        } catch (S3Exception e) {
+            throw new S3UploadException(
+                    "Không thể tải file từ S3: " + e.awsErrorDetails().errorMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        } catch (Exception e) {
+            throw new S3UploadException(
+                    "Lỗi khi tải file: " + e.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * Download file as InputStream từ S3
+     * @param key S3 object key
+     * @return InputStream
+     */
+    public InputStream downloadFileAsStream(String key) {
+        try {
+            GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                    .bucket(awsBucketName)
+                    .key(key)
+                    .build();
+
+            ResponseInputStream<GetObjectResponse> inputStream = s3Client.getObject(getObjectRequest);
+
+            return inputStream;
+
+        } catch (S3Exception e) {
+            throw new S3UploadException(
+                    "Không thể tải file từ S3: " + e.awsErrorDetails().errorMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        } catch (Exception e) {
+            throw new S3UploadException(
+                    "Lỗi khi tải file: " + e.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    /**
+     * Check if file exists in S3
+     * @param key S3 object key
+     * @return true nếu tồn tại
+     */
+    public boolean fileExists(String key) {
+        try {
+            HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
+                    .bucket(awsBucketName)
+                    .key(key)
+                    .build();
+
+            s3Client.headObject(headObjectRequest);
+            return true;
+
+        } catch (NoSuchKeyException e) {
+            return false;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
 }

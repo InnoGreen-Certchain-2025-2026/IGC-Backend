@@ -136,6 +136,11 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security-oauth2-resource-server-test</artifactId>
             <scope>test</scope>
@@ -171,43 +176,38 @@
         <!-- ===================== PDF ===================== -->
         <dependency>
             <groupId>com.itextpdf</groupId>
+            <artifactId>sign</artifactId>
+            <version>7.2.5</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.itextpdf</groupId>
             <artifactId>kernel</artifactId>
-            <version>9.4.0</version>
+            <version>7.2.5</version>
         </dependency>
 
         <dependency>
             <groupId>com.itextpdf</groupId>
             <artifactId>layout</artifactId>
-            <version>9.4.0</version>
+            <version>7.2.5</version>
         </dependency>
 
         <dependency>
             <groupId>com.itextpdf</groupId>
             <artifactId>io</artifactId>
-            <version>9.4.0</version>
+            <version>7.2.5</version>
         </dependency>
 
-        <dependency>
-            <groupId>com.itextpdf</groupId>
-            <artifactId>sign</artifactId>
-            <version>9.4.0</version>
-        </dependency>
-
-        <!-- Bouncy Castle for Digital Signature -->
-        <!-- Source: https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on -->
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk18on</artifactId>
-            <version>1.83</version>
-            <scope>compile</scope>
+            <version>1.78</version>
         </dependency>
 
-        <!-- Source: https://mvnrepository.com/artifact/org.bouncycastle/bcpkix-jdk18on -->
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcpkix-jdk18on</artifactId>
-            <version>1.83</version>
-            <scope>compile</scope>
+            <version>1.78</version>
         </dependency>
 
         <!-- IO File -->

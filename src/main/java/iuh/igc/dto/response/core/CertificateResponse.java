@@ -48,8 +48,8 @@ public record CertificateResponse(
         @JsonProperty("issueDate")
         LocalDate issueDate,
 
-        @JsonProperty("documentHash")
-        String documentHash,
+        @JsonProperty("signPdfHash")
+        String signedPdfHash,
 
         @JsonProperty("blockchainTxHash")
         String blockchainTxHash,

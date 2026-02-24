@@ -65,7 +65,7 @@ public class Certificate extends BaseEntity {
     private Long pdfSizeBytes;
 
     // Hash pdf signed
-    @Column(name = "signed_pdf_hash", nullable = false, unique = true, length = 66)
+    @Column(name = "signed_pdf_hash", unique = true, length = 66)
     private String signedPdfHash;
 
     // Thông tin chữ ký số
@@ -74,9 +74,6 @@ public class Certificate extends BaseEntity {
 
     @Column(name = "signer_name")
     private String signerName;
-
-    @Column(name = "document_hash", nullable = false, unique = true, length = 66)
-    String documentHash;
 
     @Column(name = "blockchain_tx_hash", length = 66)
     String blockchainTxHash;
