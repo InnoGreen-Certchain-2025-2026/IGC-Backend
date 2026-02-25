@@ -145,79 +145,25 @@ public class S3Service {
      * @return byte array của file
      */
     public byte[] downloadFileAsBytes(String key) {
+
         try {
             GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                     .bucket(awsBucketName)
                     .key(key)
                     .build();
 
-            ResponseBytes<GetObjectResponse> objectBytes = s3Client.getObjectAsBytes(getObjectRequest);
-            byte[] data = objectBytes.asByteArray();
+            ResponseBytes<GetObjectResponse> objectBytes =
+                    s3Client.getObjectAsBytes(getObjectRequest);
 
-            return data;
-
-        } catch (S3Exception e) {
-            throw new S3UploadException(
-                    "Không thể tải file từ S3: " + e.awsErrorDetails().errorMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        } catch (Exception e) {
-            throw new S3UploadException(
-                    "Lỗi khi tải file: " + e.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        }
-    }
-
-    /**
-     * Download file as InputStream từ S3
-     * @param key S3 object key
-     * @return InputStream
-     */
-    public InputStream downloadFileAsStream(String key) {
-        try {
-            GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-                    .bucket(awsBucketName)
-                    .key(key)
-                    .build();
-
-            ResponseInputStream<GetObjectResponse> inputStream = s3Client.getObject(getObjectRequest);
-
-            return inputStream;
-
-        } catch (S3Exception e) {
-            throw new S3UploadException(
-                    "Không thể tải file từ S3: " + e.awsErrorDetails().errorMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        } catch (Exception e) {
-            throw new S3UploadException(
-                    "Lỗi khi tải file: " + e.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        }
-    }
-
-    /**
-     * Check if file exists in S3
-     * @param key S3 object key
-     * @return true nếu tồn tại
-     */
-    public boolean fileExists(String key) {
-        try {
-            HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
-                    .bucket(awsBucketName)
-                    .key(key)
-                    .build();
-
-            s3Client.headObject(headObjectRequest);
-            return true;
+            return objectBytes.asByteArray();
 
         } catch (NoSuchKeyException e) {
-            return false;
+            throw new RuntimeException("File not found in S3");
         } catch (Exception e) {
-            return false;
+            throw new RuntimeException("Failed to download file from S3", e);
         }
     }
+
+
 
 }

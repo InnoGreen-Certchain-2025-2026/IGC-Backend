@@ -1,6 +1,7 @@
 package iuh.igc.service.core;
 
 import iuh.igc.dto.request.core.CertificateRequest;
+import iuh.igc.dto.response.core.CertificateDownloadResponse;
 import iuh.igc.dto.response.core.CertificateResponse;
 import iuh.igc.dto.response.core.VerifyResponse;
 import iuh.igc.entity.Certificate;
@@ -38,6 +39,8 @@ public interface CertificateService {
     List<CertificateResponse> getCertificatesByOrganizationId(Long id);
 
     CertificateResponse getCertificateById(String certificateId);
+
+    CertificateDownloadResponse downloadCertificate(String certificateId);
 
     /**
      * Map Entity to Response

@@ -2,6 +2,7 @@ package iuh.igc.service.core.impl;
 
 import iuh.igc.config.s3.S3Service;
 import iuh.igc.dto.request.core.CertificateRequest;
+import iuh.igc.dto.response.core.CertificateDownloadResponse;
 import iuh.igc.dto.response.core.CertificateResponse;
 import iuh.igc.dto.response.core.VerifyResponse;
 import iuh.igc.entity.Certificate;
@@ -644,5 +645,28 @@ public class CertificateServiceImpl implements CertificateService {
         return certificateRepository.findCertificateByStudentId(user.getId()).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public CertificateDownloadResponse downloadCertificate(String certificateId) {
+
+        User user = currentUserProvider.get();
+
+        Certificate certificate = certificateRepository
+                .findByCertificateId(certificateId)
+                .orElseThrow(() -> new RuntimeException("Certificate not found"));
+
+        if (!certificate.getStudentId().equals(user.getId())) {
+            throw new RuntimeException("You are not allowed to download this certificate");
+        }
+
+        byte[] pdfBytes = s3Service.downloadFileAsBytes(
+                certificate.getPdfS3Path()
+        );
+
+        return new CertificateDownloadResponse(
+                certificate.getPdfFilename(),
+                pdfBytes
+        );
     }
 }

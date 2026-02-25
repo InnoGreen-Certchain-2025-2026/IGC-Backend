@@ -2,6 +2,7 @@ package iuh.igc.controller;
 
 import iuh.igc.dto.base.ApiResponse;
 import iuh.igc.dto.request.core.CertificateRequest;
+import iuh.igc.dto.response.core.CertificateDownloadResponse;
 import iuh.igc.dto.response.core.CertificateResponse;
 import iuh.igc.dto.response.core.VerifyResponse;
 import iuh.igc.service.core.CertificateService;
@@ -102,41 +103,6 @@ public class CertificateController {
         } catch (Exception e) {
             log.error("Verification failed for certificate: {}", certificateId, e);
             return new ApiResponse<>("Verification failed", HttpStatus.INTERNAL_SERVER_ERROR.value());
-        }
-    }
-
-    /**
-     * Download certificate PDF
-     * GET /api/certificates/{certificateId}/download
-     *
-     * Note: This endpoint returns ResponseEntity for file download
-     */
-    @GetMapping("/{certificateId}/download")
-    public ResponseEntity<?> downloadCertificate(@PathVariable String certificateId) {
-        try {
-            log.info("Download request for certificate: {}", certificateId);
-
-            byte[] pdfBytes = certificateService.downloadCertificatePdf(certificateId);
-            ByteArrayResource resource = new ByteArrayResource(pdfBytes);
-
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION,
-                            "attachment; filename=\"" + certificateId + ".pdf\"")
-                    .contentType(MediaType.APPLICATION_PDF)
-                    .contentLength(pdfBytes.length)
-                    .body(resource);
-
-        } catch (IllegalArgumentException e) {
-            log.error("Certificate not found: {}", certificateId);
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse<>(e.getMessage(), HttpStatus.NOT_FOUND.value()));
-
-        } catch (Exception e) {
-            log.error("Download failed for certificate: {}", certificateId, e);
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse<>("Download failed", HttpStatus.INTERNAL_SERVER_ERROR.value()));
         }
     }
 
@@ -269,5 +235,19 @@ public class CertificateController {
                 certificateService.getAllCertificatesByStudentId();
 
         return new ApiResponse<>(responses);
+    }
+
+    @GetMapping("/{certificateId}/download")
+    public ResponseEntity<byte[]> downloadCertificate(
+            @PathVariable String certificateId
+    ) {
+        CertificateDownloadResponse response =
+                certificateService.downloadCertificate(certificateId);
+
+        return ResponseEntity.ok()
+                .header("Content-Disposition",
+                        "attachment; filename=\"" + response.filename() + "\"")
+                .header("Content-Type", "application/pdf")
+                .body(response.bytes());
     }
 }
