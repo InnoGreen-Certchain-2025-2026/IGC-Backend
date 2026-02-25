@@ -15,7 +15,11 @@ public interface CertificateRepository extends JpaRepository<@NonNull Certificat
 
     Optional<Certificate> findBySignedPdfHash(String signedPdfHash);
 
+    Optional<Certificate> findByClaimCode(String claimCode);
+
     List<Certificate> findCertificateByIssuer(String issuer);
+
+    boolean existsByClaimCode(String claimCode);
 
     boolean existsByCertificateId(String certificateId);
 }

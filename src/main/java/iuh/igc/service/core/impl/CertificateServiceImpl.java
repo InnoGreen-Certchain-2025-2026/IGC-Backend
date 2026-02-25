@@ -28,6 +28,8 @@ import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -123,6 +125,8 @@ public class CertificateServiceImpl implements CertificateService {
 
             // ========== STEP 5: Save to Database ==========
             log.info("💾 Step 5: Saving to database...");
+
+
             Certificate certificate = Certificate.builder()
                     .certificateId(request.certificateId())
                     .studentName(request.studentName())
@@ -135,16 +139,21 @@ public class CertificateServiceImpl implements CertificateService {
                     .issuer(organization.getCode())
                     .issueDate(request.issueDate())
                     .pdfFilename(filename)
-                    .pdfS3Path(s3Key)  // Lưu key để download sau này
-                    .pdfS3Url(s3Url)   // Lưu full URL
+                    .pdfS3Path(s3Key)
+                    .pdfS3Url(s3Url)
                     .pdfSizeBytes((long) signedPdf.length)
                     .signedPdfHash(signedPdfHash)
                     .signatureTimestamp(LocalDateTime.now())
                     .signerName(organization.getName())
                     .isValid(true)
+                    .claimCode(generateClaimCode(organization.getCode()))
+                    .isClaim(false)
                     .build();
 
             certificate = certificateRepository.save(certificate);
+
+
+
             log.info("✅ Saved to database - ID: {}", certificate.getId());
 
             // ========== STEP 6: Write to Blockchain ==========
@@ -594,4 +603,26 @@ public class CertificateServiceImpl implements CertificateService {
         return mapToResponse(certificate);
     }
 
+    @Override
+    public String generateClaimCode(String organizationCode) {
+        String claimCode;
+        do {
+            int number = ThreadLocalRandom.current().nextInt(100000, 1000000);
+            claimCode = organizationCode + "-" + number;
+        } while (certificateRepository.existsByClaimCode(claimCode));
+
+        return claimCode;
+    }
+
+    @Override
+    @Transactional
+    public CertificateResponse getCertificateByClaimCode(String claimCode) {
+        Certificate certificate = certificateRepository.findByClaimCode(claimCode)
+                .orElseThrow(() -> new RuntimeException("Certificate not found for claim code: " + claimCode));
+
+        certificate.setIsClaim(true);
+        certificate = certificateRepository.save(certificate);
+
+        return mapToResponse(certificate);
+    }
 }

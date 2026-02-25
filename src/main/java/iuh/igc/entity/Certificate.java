@@ -86,4 +86,10 @@ public class Certificate extends BaseEntity {
 
     @Column(name = "is_valid")
     Boolean isValid = true;
+
+    @Column(name = "claim_code", unique = true)
+    String claimCode;
+
+    @Column(name = "is_claim")
+    Boolean isClaim;
 }

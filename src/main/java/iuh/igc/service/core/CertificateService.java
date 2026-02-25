@@ -28,6 +28,11 @@ public interface CertificateService {
 
     List<CertificateResponse> getAllCertificates();
 
+    String generateClaimCode(String organizationCode);
+
+    @Transactional
+    CertificateResponse getCertificateByClaimCode(String claimCode);
+
     List<CertificateResponse> getCertificatesByOrganizationId(Long id);
 
     CertificateResponse getCertificateById(String certificateId);
