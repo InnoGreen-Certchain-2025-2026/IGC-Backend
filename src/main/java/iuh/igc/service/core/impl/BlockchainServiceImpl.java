@@ -17,6 +17,8 @@ import org.web3j.abi.datatypes.Utf8String;
 import org.web3j.abi.datatypes.generated.Bytes32;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.Credentials;
+import org.web3j.crypto.RawTransaction;
+import org.web3j.crypto.TransactionEncoder;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.Transaction;
@@ -25,6 +27,7 @@ import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.tx.gas.StaticGasProvider;
+import org.web3j.utils.Numeric;
 
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -202,6 +205,35 @@ public class BlockchainServiceImpl implements BlockchainService {
     }
 
     @Override
+    public TransactionReceipt reactivateCertificate(String certificateId) {
+        try {
+            log.info("♻️ Reactivating certificate: {}", certificateId);
+
+            Function function = new Function(
+                    "reactivateCertificate",
+                    Arrays.asList(new Utf8String(certificateId)),
+                    Collections.emptyList()
+            );
+
+            String encodedFunction = FunctionEncoder.encode(function);
+
+            EthSendTransaction transactionResponse = web3j.ethSendRawTransaction(
+                    createSignedTransaction(encodedFunction)
+            ).send();
+
+            String txHash = transactionResponse.getTransactionHash();
+            TransactionReceipt receipt = waitForReceipt(txHash);
+
+            log.info("✅ Certificate reactivated");
+            return receipt;
+
+        } catch (Exception e) {
+            log.error("❌ Reactivation failed", e);
+            throw new RuntimeException("Failed to reactivate certificate", e);
+        }
+    }
+
+    @Override
     public Web3j getWeb3j() {
         return web3j;
     }
@@ -212,8 +244,8 @@ public class BlockchainServiceImpl implements BlockchainService {
                 DefaultBlockParameterName.LATEST
         ).send().getTransactionCount();
 
-        org.web3j.crypto.RawTransaction rawTransaction =
-                org.web3j.crypto.RawTransaction.createTransaction(
+        RawTransaction rawTransaction =
+                RawTransaction.createTransaction(
                         nonce,
                         gasProvider.getGasPrice(),
                         gasProvider.getGasLimit(),
@@ -221,12 +253,12 @@ public class BlockchainServiceImpl implements BlockchainService {
                         encodedFunction
                 );
 
-        byte[] signedMessage = org.web3j.crypto.TransactionEncoder.signMessage(
+        byte[] signedMessage = TransactionEncoder.signMessage(
                 rawTransaction,
                 credentials
         );
 
-        return org.web3j.utils.Numeric.toHexString(signedMessage);
+        return Numeric.toHexString(signedMessage);
     }
 
     private TransactionReceipt waitForReceipt(String txHash) throws Exception {

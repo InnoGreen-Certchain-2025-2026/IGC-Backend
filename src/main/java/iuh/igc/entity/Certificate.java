@@ -28,7 +28,7 @@ public class Certificate extends BaseEntity {
     @Column(name = "student_name", nullable = false)
     String studentName;
 
-    @Column(name = "student_id", nullable = false)
+    @Column(name = "student_id", nullable = true)
     String studentId;
 
     @Column(name = "date_of_birth")

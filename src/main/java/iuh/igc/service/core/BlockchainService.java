@@ -13,6 +13,8 @@ public interface BlockchainService {
 
     TransactionReceipt revokeCertificate(String certificateId);
 
+    TransactionReceipt reactivateCertificate(String certificateId);
+
     Web3j getWeb3j();
 
     /**

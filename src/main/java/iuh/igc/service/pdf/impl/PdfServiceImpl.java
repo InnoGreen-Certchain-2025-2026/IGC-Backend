@@ -32,7 +32,7 @@ public class PdfServiceImpl implements PdfService {
      * Generate PDF certificate
      */
     @Override
-    public byte[] generateCertificatePdf(CertificateRequest request) {
+    public byte[] generateCertificatePdf(CertificateRequest request, String vendorName) {
         try {
             log.info("📄 Generating PDF for: {}", request.certificateId());
 
@@ -53,7 +53,7 @@ public class PdfServiceImpl implements PdfService {
             PdfFont regularFont = PdfFontFactory.createFont("Helvetica", PdfEncodings.WINANSI);
 
             // Header - University Name
-            Paragraph header = new Paragraph(issuerName.toUpperCase())
+            Paragraph header = new Paragraph(vendorName.toUpperCase())
                     .setFont(boldFont)
                     .setFontSize(24)
                     .setFontColor(primaryColor)
@@ -87,7 +87,7 @@ public class PdfServiceImpl implements PdfService {
                     .setMarginBottom(20);
 
             addInfoRow(infoTable, "Student Name:", request.studentName(), boldFont, regularFont);
-            addInfoRow(infoTable, "Student ID:", request.studentId(), boldFont, regularFont);
+            //addInfoRow(infoTable, "Student ID:", request.studentId(), boldFont, regularFont);
 
             if (request.dateOfBirth() != null) {
                 addInfoRow(infoTable, "Date of Birth:",

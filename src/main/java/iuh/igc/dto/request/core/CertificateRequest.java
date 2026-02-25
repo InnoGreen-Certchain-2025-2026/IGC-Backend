@@ -18,9 +18,9 @@ public record CertificateRequest(
 
         @NotBlank(message = "Student name is required")
         String studentName,
-
-        @NotBlank(message = "Student ID is required")
-        String studentId,
+//
+//        @NotBlank(message = "Student ID is required")
+//        String studentId,
 
         LocalDate dateOfBirth,
 

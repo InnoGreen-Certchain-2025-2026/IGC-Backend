@@ -11,18 +11,24 @@ import java.util.List;
 
 public interface CertificateService {
     @Transactional
-    CertificateResponse issueCertificate(CertificateRequest request, String vendorUsername);
+    CertificateResponse issueCertificate(CertificateRequest request, Long organizationId);
 
     VerifyResponse verifyCertificate(String certificateId);
 
     VerifyResponse verifyCertificateByFile(MultipartFile pdfFile);
+
 
     byte[] downloadCertificatePdf(String certificateId);
 
     @Transactional
     CertificateResponse revokeCertificate(String certificateId);
 
+    @Transactional
+    CertificateResponse reactivateCertificate(String certificateId);
+
     List<CertificateResponse> getAllCertificates();
+
+    List<CertificateResponse> getCertificatesByOrganizationId(Long id);
 
     CertificateResponse getCertificateById(String certificateId);
 

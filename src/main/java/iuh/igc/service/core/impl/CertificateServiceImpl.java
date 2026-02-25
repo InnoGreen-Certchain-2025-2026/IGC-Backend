@@ -5,12 +5,18 @@ import iuh.igc.dto.request.core.CertificateRequest;
 import iuh.igc.dto.response.core.CertificateResponse;
 import iuh.igc.dto.response.core.VerifyResponse;
 import iuh.igc.entity.Certificate;
+import iuh.igc.entity.User;
+import iuh.igc.entity.organization.Organization;
 import iuh.igc.repository.CertificateRepository;
+import iuh.igc.repository.OrganizationMemberRepository;
+import iuh.igc.repository.OrganizationRepository;
 import iuh.igc.service.core.BlockchainService;
 import iuh.igc.service.core.CertificateService;
 import iuh.igc.service.pdf.DigitalSignatureService;
 import iuh.igc.service.pdf.HashService;
 import iuh.igc.service.pdf.PdfService;
+import iuh.igc.service.user.CurrentUserProvider;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,11 +36,15 @@ import java.util.stream.Collectors;
 public class CertificateServiceImpl implements CertificateService {
 
     private final CertificateRepository certificateRepository;
+    private final OrganizationMemberRepository organizationMemberRepository;
     private final BlockchainService blockchainService;
     private final PdfService pdfService;
     private final DigitalSignatureService signatureService;
     private final HashService hashService;
     private final S3Service s3Service;
+    private final OrganizationRepository organizationRepository;
+
+    private final CurrentUserProvider currentUserProvider;
 
     @Value("${blockchain.issuer-name}")
     private String issuerName;
@@ -44,21 +54,29 @@ public class CertificateServiceImpl implements CertificateService {
      */
     @Override
     @Transactional
-    public CertificateResponse issueCertificate(CertificateRequest request, String vendorUsername) {
+    public CertificateResponse issueCertificate(CertificateRequest request, Long organizationId) {
+        User user = currentUserProvider.get();
+
+        Organization organization = organizationRepository
+                .findByIdAndOrganizationMembers_User_Id(organizationId, user.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy tổ chức"));
+
         log.info("🎓 ========== ISSUING NEW CERTIFICATE ==========");
         log.info("Certificate ID: {}", request.certificateId());
         log.info("Student: {}", request.studentName());
-        log.info("Vendor: {}", vendorUsername);
+        log.info("Vendor: {}", organization.getName());
 
         // Kiểm tra trùng lặp
         if (certificateRepository.existsByCertificateId(request.certificateId())) {
             throw new RuntimeException("Certificate ID already exists: " + request.certificateId());
         }
 
+
+
         try {
             // ========== STEP 1: Generate PDF ==========
             log.info("📄 Step 1: Generating PDF template...");
-            byte[] unsignedPdf = pdfService.generateCertificatePdf(request);
+            byte[] unsignedPdf = pdfService.generateCertificatePdf(request, organization.getName());
             log.info("✅ PDF generated - Size: {} bytes", unsignedPdf.length);
 
             // ========== STEP 2: Digital Signature ==========
@@ -108,13 +126,13 @@ public class CertificateServiceImpl implements CertificateService {
             Certificate certificate = Certificate.builder()
                     .certificateId(request.certificateId())
                     .studentName(request.studentName())
-                    .studentId(request.studentId())
+//                    .studentId(request.studentId())
                     .dateOfBirth(request.dateOfBirth())
                     .major(request.major())
                     .graduationYear(request.graduationYear())
                     .gpa(request.gpa())
                     .certificateType(request.certificateType())
-                    .issuer(issuerName)
+                    .issuer(organization.getCode())
                     .issueDate(request.issueDate())
                     .pdfFilename(filename)
                     .pdfS3Path(s3Key)  // Lưu key để download sau này
@@ -122,7 +140,7 @@ public class CertificateServiceImpl implements CertificateService {
                     .pdfSizeBytes((long) signedPdf.length)
                     .signedPdfHash(signedPdfHash)
                     .signatureTimestamp(LocalDateTime.now())
-                    .signerName(vendorUsername)
+                    .signerName(organization.getName())
                     .isValid(true)
                     .build();
 
@@ -519,6 +537,30 @@ public class CertificateServiceImpl implements CertificateService {
         return mapToResponse(certificate);
     }
 
+    @Override
+    @Transactional
+    public CertificateResponse reactivateCertificate(String certificateId) {
+        log.info("♻️ Reactivating certificate: {}", certificateId);
+
+        Certificate certificate = certificateRepository.findByCertificateId(certificateId)
+                .orElseThrow(() -> new RuntimeException("Certificate not found: " + certificateId));
+
+        if (certificate.getIsValid()) {
+            throw new RuntimeException("Certificate is already active");
+        }
+
+        // Reactivate trên blockchain
+        blockchainService.reactivateCertificate(certificateId);
+
+        // Cập nhật database
+        certificate.setIsValid(true);
+        certificate = certificateRepository.save(certificate);
+
+        log.info("✅ Certificate reactivated successfully");
+
+        return mapToResponse(certificate);
+    }
+
     /**
      * Lấy tất cả chứng chỉ
      */
@@ -526,6 +568,17 @@ public class CertificateServiceImpl implements CertificateService {
     public List<CertificateResponse> getAllCertificates() {
         log.info("📋 Getting all certificates");
         return certificateRepository.findAll().stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<CertificateResponse> getCertificatesByOrganizationId(Long organizationId) {
+        log.info("📋 Getting certificates for organization ID: {}", organizationId);
+        return certificateRepository.findAll().stream()
+                .filter(cert -> cert.getIssuer().equals(organizationRepository.findById(organizationId)
+                        .orElseThrow(() -> new RuntimeException("Organization not found"))
+                        .getCode()))
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }

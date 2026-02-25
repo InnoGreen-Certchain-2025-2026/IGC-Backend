@@ -8,7 +8,7 @@ import com.itextpdf.layout.element.Table;
 import iuh.igc.dto.request.core.CertificateRequest;
 
 public interface PdfService {
-    byte[] generateCertificatePdf(CertificateRequest request);
+    byte[] generateCertificatePdf(CertificateRequest request, String vendorName);
 
     default void addInfoRow(Table table, String label, String value, PdfFont boldFont, PdfFont regularFont) {
         table.addCell(new Cell()

@@ -1,5 +1,6 @@
 package iuh.igc.controller;
 
+import iuh.igc.dto.base.ApiResponse;
 import iuh.igc.dto.request.core.CertificateRequest;
 import iuh.igc.dto.response.core.CertificateResponse;
 import iuh.igc.dto.response.core.VerifyResponse;
@@ -18,9 +19,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @RestController
@@ -32,227 +31,221 @@ public class CertificateController {
     CertificateService certificateService;
 
     /**
-     * ===============================
-     * ISSUE CERTIFICATE
+     * Issue new certificate
      * POST /api/certificates
-     * ===============================
      */
-    @PostMapping
-    public ResponseEntity<?> issueCertificate(
-            @Valid @RequestBody CertificateRequest request,
-            Authentication authentication
+    @PostMapping("/{id}")
+    public ApiResponse<CertificateResponse> issueCertificate(
+            @Valid @RequestBody CertificateRequest request, @PathVariable("id") Long id
     ) {
         try {
-            String vendorUsername = authentication.getName();
 
-            log.info("📥 Request to issue certificate: {}", request.certificateId());
+            log.info("Request to issue certificate: {} by user: {}", request.certificateId(), id);
 
-            CertificateResponse response =
-                    certificateService.issueCertificate(request, vendorUsername);
+            CertificateResponse response = certificateService.issueCertificate(request, id);
 
-            Map<String, Object> result = new HashMap<>();
-            result.put("success", true);
-            result.put("message", "Certificate issued successfully");
-            result.put("data", response);
+            return new ApiResponse<>(response);
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(result);
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid certificate data: {}", e.getMessage());
+            return new ApiResponse<>(e.getMessage(), HttpStatus.BAD_REQUEST.value());
 
         } catch (Exception e) {
-            log.error("❌ Error issuing certificate", e);
-
-            Map<String, Object> error = new HashMap<>();
-            error.put("success", false);
-            error.put("message", "Failed to issue certificate");
-            error.put("error", e.getMessage());
-
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+            log.error("Failed to issue certificate", e);
+            return new ApiResponse<>("Failed to issue certificate", HttpStatus.INTERNAL_SERVER_ERROR.value());
         }
     }
 
-    @PostMapping(value = "/by-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> verifyCertificateByFile(@RequestParam("file") MultipartFile file) {
+    /**
+     * Verify certificate by file upload
+     * POST /api/certificates/verify/by-file
+     */
+    @PostMapping(value = "/verify/by-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<VerifyResponse> verifyCertificateByFile(
+            @RequestParam("file") MultipartFile file
+    ) {
         try {
-            log.info("🔍 ========== VERIFICATION REQUEST BY FILE ==========");
-            log.info("File name: {}", file.getOriginalFilename());
-            log.info("File size: {} bytes", file.getSize());
-            log.info("Content type: {}", file.getContentType());
+            log.info("Verification request by file: {} - {} bytes",
+                    file.getOriginalFilename(), file.getSize());
 
             VerifyResponse response = certificateService.verifyCertificateByFile(file);
 
-            Map<String, Object> result = new HashMap<>();
-            result.put("success", true);
-            result.put("data", response);
+            log.info("Verification result: {}", response.valid() ? "VALID" : "INVALID");
 
-            Map<String, Object> summary = new HashMap<>();
-            summary.put("certificateExists", response.exists());
-            summary.put("isValid", response.valid());
-            summary.put("fileAuthentic", response.valid());
-            summary.put("allChecksPass", response.exists() && response.valid());
-            result.put("summary", summary);
+            return new ApiResponse<>(response);
 
-            log.info("Verification result: {}", response.valid() ? "✅ AUTHENTIC" : "❌ INVALID/TAMPERED");
-
-            return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid file: {}", e.getMessage());
+            return new ApiResponse<>(e.getMessage(), HttpStatus.BAD_REQUEST.value());
 
         } catch (Exception e) {
-            log.error("❌ File verification error", e);
-
-            Map<String, Object> error = new HashMap<>();
-            error.put("success", false);
-            error.put("message", "File verification failed");
-            error.put("error", e.getMessage());
-
-            return ResponseEntity.status(500).body(error);
+            log.error("File verification failed", e);
+            return new ApiResponse<>("File verification failed", HttpStatus.INTERNAL_SERVER_ERROR.value());
         }
     }
 
     /**
-     * ===============================
-     * VERIFY CERTIFICATE
-     * GET /api/certificates/{id}/verify
-     * ===============================
+     * Verify certificate by certificate ID
+     * GET /api/certificates/{certificateId}/verify
      */
-//    @GetMapping("/{certificateId}/verify")
-//    public ResponseEntity<?> verifyCertificate(@PathVariable String certificateId) {
-//        try {
-//            VerifyResponse response =
-//                    certificateService.verifyCertificate(certificateId);
-//
-//            Map<String, Object> result = new HashMap<>();
-//            result.put("success", response.valid());
-//            result.put("data", response);
-//
-//            return ResponseEntity.ok(result);
-//
-//        } catch (Exception e) {
-//            log.error("❌ Error verifying certificate", e);
-//
-//            Map<String, Object> error = new HashMap<>();
-//            error.put("success", false);
-//            error.put("message", "Verification failed");
-//            error.put("error", e.getMessage());
-//
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-//        }
-//    }
-//
-//    /**
-//     * ===============================
-//     * DOWNLOAD PDF
-//     * GET /api/certificates/{id}/download
-//     * ===============================
-//     */
-//    @GetMapping("/{certificateId}/download")
-//    public ResponseEntity<?> downloadCertificate(@PathVariable String certificateId) {
-//        try {
-//            byte[] pdfBytes =
-//                    certificateService.downloadCertificatePdf(certificateId);
-//
-//            ByteArrayResource resource = new ByteArrayResource(pdfBytes);
-//
-//            return ResponseEntity.ok()
-//                    .header(HttpHeaders.CONTENT_DISPOSITION,
-//                            "attachment; filename=\"" + certificateId + ".pdf\"")
-//                    .contentType(MediaType.APPLICATION_PDF)
-//                    .contentLength(pdfBytes.length)
-//                    .body(resource);
-//
-//        } catch (Exception e) {
-//            log.error("❌ Error downloading certificate", e);
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-//                    .body("Certificate not found or download failed");
-//        }
-//    }
+    @GetMapping("/{certificateId}/verify")
+    public ApiResponse<VerifyResponse> verifyCertificate(
+            @PathVariable String certificateId
+    ) {
+        try {
+            log.info("Verification request for certificate: {}", certificateId);
+
+            VerifyResponse response = certificateService.verifyCertificate(certificateId);
+
+            return new ApiResponse<>(response);
+
+        } catch (Exception e) {
+            log.error("Verification failed for certificate: {}", certificateId, e);
+            return new ApiResponse<>("Verification failed", HttpStatus.INTERNAL_SERVER_ERROR.value());
+        }
+    }
 
     /**
-     * ===============================
-     * GET ALL CERTIFICATES
+     * Download certificate PDF
+     * GET /api/certificates/{certificateId}/download
+     *
+     * Note: This endpoint returns ResponseEntity for file download
+     */
+    @GetMapping("/{certificateId}/download")
+    public ResponseEntity<?> downloadCertificate(@PathVariable String certificateId) {
+        try {
+            log.info("Download request for certificate: {}", certificateId);
+
+            byte[] pdfBytes = certificateService.downloadCertificatePdf(certificateId);
+            ByteArrayResource resource = new ByteArrayResource(pdfBytes);
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"" + certificateId + ".pdf\"")
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .contentLength(pdfBytes.length)
+                    .body(resource);
+
+        } catch (IllegalArgumentException e) {
+            log.error("Certificate not found: {}", certificateId);
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>(e.getMessage(), HttpStatus.NOT_FOUND.value()));
+
+        } catch (Exception e) {
+            log.error("Download failed for certificate: {}", certificateId, e);
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>("Download failed", HttpStatus.INTERNAL_SERVER_ERROR.value()));
+        }
+    }
+
+    /**
+     * Get all certificates
      * GET /api/certificates
-     * ===============================
      */
     @GetMapping
-    public ResponseEntity<?> getAllCertificates() {
+    public ApiResponse<List<CertificateResponse>> getAllCertificates() {
         try {
-            List<CertificateResponse> certificates =
-                    certificateService.getAllCertificates();
+            log.info("Request to get all certificates");
 
-            Map<String, Object> result = new HashMap<>();
-            result.put("success", true);
-            result.put("count", certificates.size());
-            result.put("data", certificates);
+            List<CertificateResponse> certificates = certificateService.getAllCertificates();
 
-            return ResponseEntity.ok(result);
+            return new ApiResponse<>(certificates);
 
         } catch (Exception e) {
-            log.error("❌ Error retrieving certificates", e);
+            log.error("Failed to retrieve certificates", e);
+            return new ApiResponse<>("Failed to retrieve certificates", HttpStatus.INTERNAL_SERVER_ERROR.value());
+        }
+    }
 
-            Map<String, Object> error = new HashMap<>();
-            error.put("success", false);
-            error.put("message", "Failed to retrieve certificates");
-            error.put("error", e.getMessage());
+    @GetMapping("/organization/{id}")
+    public ApiResponse<List<CertificateResponse>> getCertificatesByOrganizationId(@PathVariable("id") Long id) {
+        try {
+            log.info("Request to get certificates for organization: {}", id);
 
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+            List<CertificateResponse> certificates = certificateService.getCertificatesByOrganizationId(id);
+
+            return new ApiResponse<>(certificates);
+
+        } catch (Exception e) {
+            log.error("Failed to retrieve certificates for organization: {}", id, e);
+            return new ApiResponse<>("Failed to retrieve certificates", HttpStatus.INTERNAL_SERVER_ERROR.value());
         }
     }
 
     /**
-     * ===============================
-     * GET CERTIFICATE BY ID
-     * GET /api/certificates/{id}
-     * ===============================
+     * Get certificate by ID
+     * GET /api/certificates/{certificateId}
      */
     @GetMapping("/{certificateId}")
-    public ResponseEntity<?> getCertificateById(@PathVariable String certificateId) {
+    public ApiResponse<CertificateResponse> getCertificateById(
+            @PathVariable String certificateId
+    ) {
         try {
-            CertificateResponse certificate =
-                    certificateService.getCertificateById(certificateId);
+            log.info("Request to get certificate: {}", certificateId);
 
-            Map<String, Object> result = new HashMap<>();
-            result.put("success", true);
-            result.put("data", certificate);
+            CertificateResponse certificate = certificateService.getCertificateById(certificateId);
 
-            return ResponseEntity.ok(result);
+            return new ApiResponse<>(certificate);
+
+        } catch (IllegalArgumentException e) {
+            log.error("Certificate not found: {}", certificateId);
+            return new ApiResponse<>(e.getMessage(), HttpStatus.NOT_FOUND.value());
 
         } catch (Exception e) {
-            log.error("❌ Certificate not found", e);
-
-            Map<String, Object> error = new HashMap<>();
-            error.put("success", false);
-            error.put("message", "Certificate not found");
-            error.put("error", e.getMessage());
-
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+            log.error("Failed to get certificate: {}", certificateId, e);
+            return new ApiResponse<>("Failed to get certificate", HttpStatus.INTERNAL_SERVER_ERROR.value());
         }
     }
 
     /**
-     * ===============================
-     * REVOKE CERTIFICATE
-     * DELETE /api/certificates/{id}
-     * ===============================
+     * Revoke certificate
+     * DELETE /api/certificates/{certificateId}
      */
-//    @DeleteMapping("/{certificateId}")
-//    public ResponseEntity<?> revokeCertificate(@PathVariable String certificateId) {
-//        try {
-//            CertificateResponse response =
-//                    certificateService.revokeCertificate(certificateId);
-//
-//            Map<String, Object> result = new HashMap<>();
-//            result.put("success", true);
-//            result.put("message", "Certificate revoked successfully");
-//            result.put("data", response);
-//
-//            return ResponseEntity.ok(result);
-//
-//        } catch (Exception e) {
-//            log.error("❌ Error revoking certificate", e);
-//
-//            Map<String, Object> error = new HashMap<>();
-//            error.put("success", false);
-//            error.put("message", "Failed to revoke certificate");
-//            error.put("error", e.getMessage());
-//
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-//        }
-//    }
+    @DeleteMapping("/{certificateId}")
+    public ApiResponse<CertificateResponse> revokeCertificate(
+            @PathVariable String certificateId
+    ) {
+        try {
+            log.info("Request to revoke certificate: {}", certificateId);
+
+            CertificateResponse response = certificateService.revokeCertificate(certificateId);
+
+            return new ApiResponse<>(response);
+
+        } catch (IllegalArgumentException e) {
+            log.error("Certificate not found: {}", certificateId);
+            return new ApiResponse<>(e.getMessage(), HttpStatus.NOT_FOUND.value());
+
+        } catch (Exception e) {
+            log.error("Failed to revoke certificate: {}", certificateId, e);
+            return new ApiResponse<>("Failed to revoke certificate", HttpStatus.INTERNAL_SERVER_ERROR.value());
+        }
+    }
+
+    /**
+     * Reactivate revoked certificate
+     * POST /api/certificates/{certificateId}/reactivate
+     */
+    @PostMapping("/{certificateId}/reactivate")
+    public ApiResponse<CertificateResponse> reactivateCertificate(
+            @PathVariable String certificateId
+    ) {
+        try {
+            log.info("Request to reactivate certificate: {}", certificateId);
+
+            CertificateResponse response = certificateService.reactivateCertificate(certificateId);
+
+            return new ApiResponse<>(response);
+
+        } catch (IllegalArgumentException e) {
+            log.error("Certificate not found or already active: {}", certificateId);
+            return new ApiResponse<>(e.getMessage(), HttpStatus.BAD_REQUEST.value());
+
+        } catch (Exception e) {
+            log.error("Failed to reactivate certificate: {}", certificateId, e);
+            return new ApiResponse<>("Failed to reactivate certificate", HttpStatus.INTERNAL_SERVER_ERROR.value());
+        }
+    }
 }
