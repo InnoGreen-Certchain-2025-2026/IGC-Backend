@@ -17,15 +17,17 @@ import org.web3j.abi.datatypes.Utf8String;
 import org.web3j.abi.datatypes.generated.Bytes32;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.Credentials;
+import org.web3j.crypto.RawTransaction;
+import org.web3j.crypto.TransactionEncoder;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
-import org.web3j.protocol.core.Ethereum;
 import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.EthCall;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.tx.gas.StaticGasProvider;
+import org.web3j.utils.Numeric;
 
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -117,7 +119,7 @@ public class BlockchainServiceImpl implements BlockchainService {
     }
 
     @Override
-    public VerificationResult verifyCertificate(String certificateId) {
+    public BlockchainService.VerificationResult verifyCertificate(String certificateId) {
         try {
             log.info("🔍 Verifying certificate: {}", certificateId);
 
@@ -125,14 +127,10 @@ public class BlockchainServiceImpl implements BlockchainService {
                     "verifyCertificate",
                     Arrays.asList(new Utf8String(certificateId)),
                     Arrays.asList(
-                            new TypeReference<Utf8String>() {
-                            },
-                            new TypeReference<Bytes32>() {
-                            },
-                            new TypeReference<Uint256>() {
-                            },
-                            new TypeReference<Bool>() {
-                            }
+                            new TypeReference<Utf8String>() {},
+                            new TypeReference<Bytes32>() {},
+                            new TypeReference<Uint256>() {},
+                            new TypeReference<Bool>() {}
                     )
             );
 
@@ -161,7 +159,7 @@ public class BlockchainServiceImpl implements BlockchainService {
 
             log.info("✅ Verified - Valid: {}", isValid);
 
-            return VerificationResult.builder()
+            return VerificationResultImpl.builder()
                     .certificateId(certId)
                     .documentHash(hash)
                     .issueTimestamp(timestamp.longValue())
@@ -170,7 +168,7 @@ public class BlockchainServiceImpl implements BlockchainService {
 
         } catch (Exception e) {
             log.error("❌ Verification failed", e);
-            return VerificationResult.builder()
+            return VerificationResultImpl.builder()
                     .certificateId(certificateId)
                     .isValid(false)
                     .build();
@@ -206,14 +204,48 @@ public class BlockchainServiceImpl implements BlockchainService {
         }
     }
 
+    @Override
+    public TransactionReceipt reactivateCertificate(String certificateId) {
+        try {
+            log.info("♻️ Reactivating certificate: {}", certificateId);
+
+            Function function = new Function(
+                    "reactivateCertificate",
+                    Arrays.asList(new Utf8String(certificateId)),
+                    Collections.emptyList()
+            );
+
+            String encodedFunction = FunctionEncoder.encode(function);
+
+            EthSendTransaction transactionResponse = web3j.ethSendRawTransaction(
+                    createSignedTransaction(encodedFunction)
+            ).send();
+
+            String txHash = transactionResponse.getTransactionHash();
+            TransactionReceipt receipt = waitForReceipt(txHash);
+
+            log.info("✅ Certificate reactivated");
+            return receipt;
+
+        } catch (Exception e) {
+            log.error("❌ Reactivation failed", e);
+            throw new RuntimeException("Failed to reactivate certificate", e);
+        }
+    }
+
+    @Override
+    public Web3j getWeb3j() {
+        return web3j;
+    }
+
     private String createSignedTransaction(String encodedFunction) throws Exception {
         BigInteger nonce = web3j.ethGetTransactionCount(
                 credentials.getAddress(),
                 DefaultBlockParameterName.LATEST
         ).send().getTransactionCount();
 
-        org.web3j.crypto.RawTransaction rawTransaction =
-                org.web3j.crypto.RawTransaction.createTransaction(
+        RawTransaction rawTransaction =
+                RawTransaction.createTransaction(
                         nonce,
                         gasProvider.getGasPrice(),
                         gasProvider.getGasLimit(),
@@ -221,12 +253,12 @@ public class BlockchainServiceImpl implements BlockchainService {
                         encodedFunction
                 );
 
-        byte[] signedMessage = org.web3j.crypto.TransactionEncoder.signMessage(
+        byte[] signedMessage = TransactionEncoder.signMessage(
                 rawTransaction,
                 credentials
         );
 
-        return org.web3j.utils.Numeric.toHexString(signedMessage);
+        return Numeric.toHexString(signedMessage);
     }
 
     private TransactionReceipt waitForReceipt(String txHash) throws Exception {
@@ -259,14 +291,12 @@ public class BlockchainServiceImpl implements BlockchainService {
         return sb.toString();
     }
 
-    @Override
-    public Ethereum getWeb3j() {
-        return web3j;
-    }
-
+    /**
+     * Implementation của VerificationResult
+     */
     @Data
     @Builder
-    public static class VerificationResult {
+    public static class VerificationResultImpl implements BlockchainService.VerificationResult {
         private String certificateId;
         private String documentHash;
         private Long issueTimestamp;

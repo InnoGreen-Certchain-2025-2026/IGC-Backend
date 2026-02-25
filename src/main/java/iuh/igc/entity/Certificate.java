@@ -6,6 +6,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "certificates")
@@ -27,7 +28,7 @@ public class Certificate extends BaseEntity {
     @Column(name = "student_name", nullable = false)
     String studentName;
 
-    @Column(name = "student_id", nullable = false)
+    @Column(name = "student_id", nullable = true)
     String studentId;
 
     @Column(name = "date_of_birth")
@@ -51,8 +52,28 @@ public class Certificate extends BaseEntity {
     @Column(name = "issue_date")
     LocalDate issueDate;
 
-    @Column(name = "document_hash", nullable = false, unique = true, length = 66)
-    String documentHash;
+    @Column(name = "pdf_filename")
+    private String pdfFilename;
+
+    @Column(name = "pdf_s3_path")
+    private String pdfS3Path;
+
+    @Column(name = "pdf_s3_url")
+    private String pdfS3Url;
+
+    @Column(name = "pdf_size_bytes")
+    private Long pdfSizeBytes;
+
+    // Hash pdf signed
+    @Column(name = "signed_pdf_hash", unique = true, length = 66)
+    private String signedPdfHash;
+
+    // Thông tin chữ ký số
+    @Column(name = "signature_timestamp")
+    private LocalDateTime signatureTimestamp;
+
+    @Column(name = "signer_name")
+    private String signerName;
 
     @Column(name = "blockchain_tx_hash", length = 66)
     String blockchainTxHash;

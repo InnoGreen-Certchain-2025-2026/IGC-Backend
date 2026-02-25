@@ -11,34 +11,32 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
-@Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class CertificateRequest {
+public record CertificateRequest(
+        @NotBlank(message = "Certificate ID is required")
+        String certificateId,
 
-    @NotBlank(message = "Certificate ID is required")
-    private String certificateId;
+        @NotBlank(message = "Student name is required")
+        String studentName,
+//
+//        @NotBlank(message = "Student ID is required")
+//        String studentId,
 
-    @NotBlank(message = "Student name is required")
-    private String studentName;
+        LocalDate dateOfBirth,
 
-    @NotBlank(message = "Student ID is required")
-    private String studentId;
+        String major,
 
-    private LocalDate dateOfBirth;
+        Integer graduationYear,
 
-    private String major;
+        @DecimalMin(value = "0.0")
+        @DecimalMax(value = "4.0")
+        Double gpa,
 
-    private Integer graduationYear;
+        //Update later: Enum
+        @NotBlank(message = "Certificate type is required")
+        String certificateType,
 
-    @DecimalMin(value = "0.0")
-    @DecimalMax(value = "4.0")
-    private Double gpa;
-
-    @NotBlank(message = "Certificate type is required")
-    private String certificateType;
-
-    @NotNull(message = "Issue date is required")
-    private LocalDate issueDate;
+        @NotNull(message = "Issue date is required")
+        LocalDate issueDate)
+{
 }

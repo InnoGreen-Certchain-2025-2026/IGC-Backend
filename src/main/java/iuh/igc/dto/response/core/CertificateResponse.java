@@ -8,27 +8,62 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class CertificateResponse {
+import com.fasterxml.jackson.annotation.JsonProperty;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
-    private Long id;
-    private String certificateId;
-    private String studentName;
-    private String studentId;
-    private LocalDate dateOfBirth;
-    private String major;
-    private Integer graduationYear;
-    private Double gpa;
-    private String certificateType;
-    private String issuer;
-    private LocalDate issueDate;
-    private String documentHash;
-    private String blockchainTxHash;
-    private Long blockchainBlockNumber;
-    private Long blockchainTimestamp;
-    private Boolean isValid;
-    private LocalDateTime createdAt;
-}
+@Builder
+public record CertificateResponse(
+
+        @JsonProperty("id")
+        Long id,
+
+        @JsonProperty("certificateId")
+        String certificateId,
+
+        @JsonProperty("studentName")
+        String studentName,
+
+        @JsonProperty("studentId")
+        String studentId,
+
+        @JsonProperty("dateOfBirth")
+        LocalDate dateOfBirth,
+
+        @JsonProperty("major")
+        String major,
+
+        @JsonProperty("graduationYear")
+        Integer graduationYear,
+
+        @JsonProperty("gpa")
+        Double gpa,
+
+        @JsonProperty("certificateType")
+        String certificateType,
+
+        @JsonProperty("issuer")
+        String issuer,
+
+        @JsonProperty("issueDate")
+        LocalDate issueDate,
+
+        @JsonProperty("signPdfHash")
+        String signedPdfHash,
+
+        @JsonProperty("blockchainTxHash")
+        String blockchainTxHash,
+
+        @JsonProperty("blockchainBlockNumber")
+        Long blockchainBlockNumber,
+
+        @JsonProperty("blockchainTimestamp")
+        Long blockchainTimestamp,
+
+        @JsonProperty("isValid")
+        Boolean isValid,
+
+        @JsonProperty("createdAt")
+        LocalDateTime createdAt
+
+) {}

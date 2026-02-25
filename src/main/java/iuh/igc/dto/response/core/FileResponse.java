@@ -10,11 +10,13 @@ public record FileResponse(
         @JsonProperty("dateOfBirth")
         String dateOfBirth,       // "2004-07-20"
 
-        @JsonProperty("studentId")
-        String studentId,
+//        @JsonProperty("studentId")
+//        String studentId,
 
         @JsonProperty("certificateType")
         String certificateType,
+
+        Integer graduationYear,
 
         @JsonProperty("major")
         String major,
@@ -27,5 +29,7 @@ public record FileResponse(
 
         @JsonProperty("issuer")
         String issuer
+
+
 ) {
 }

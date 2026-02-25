@@ -5,6 +5,7 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -12,7 +13,9 @@ public interface CertificateRepository extends JpaRepository<@NonNull Certificat
 
     Optional<Certificate> findByCertificateId(String certificateId);
 
-    Optional<Certificate> findByDocumentHash(String documentHash);
+    Optional<Certificate> findBySignedPdfHash(String signedPdfHash);
+
+    List<Certificate> findCertificateByIssuer(String issuer);
 
     boolean existsByCertificateId(String certificateId);
 }
