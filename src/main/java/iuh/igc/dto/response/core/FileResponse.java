@@ -1,35 +1,37 @@
 package iuh.igc.dto.response.core;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.time.LocalDate;
 
 public record FileResponse(
 
         @JsonProperty("studentName")
         String studentName,
 
-        @JsonProperty("dateOfBirth")
-        String dateOfBirth,       // "2004-07-20"
-
-//        @JsonProperty("studentId")
-//        String studentId,
+        @JsonFormat(pattern = "yyyy-MM-dd")
+        @JsonProperty("dateofBirth")
+        LocalDate dateofBirth,       // "2004-07-20"
 
         @JsonProperty("certificateType")
         String certificateType,
 
+        @JsonProperty("graduationYear")
         Integer graduationYear,
 
         @JsonProperty("major")
         String major,
 
+        @JsonFormat(pattern = "yyyy-MM-dd")
         @JsonProperty("issueDate")
-        String issueDate,         // "2025-06-20"
+        LocalDate issueDate,         // "2025-06-20"
 
         @JsonProperty("certificateId")
         String certificateId,
 
-        @JsonProperty("issuer")
-        String issuer
-
+        @JsonProperty("gpa")
+        Double gpa
 
 ) {
 }

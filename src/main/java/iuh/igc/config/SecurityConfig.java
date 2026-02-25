@@ -44,7 +44,7 @@ public class SecurityConfig {
             "/actuator/health",
 
             // Upload
-            "/api/v1/upload/**"
+            "/api/certificates/upload"
 
     };
 
