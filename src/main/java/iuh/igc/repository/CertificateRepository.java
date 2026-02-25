@@ -17,6 +17,8 @@ public interface CertificateRepository extends JpaRepository<@NonNull Certificat
 
     Optional<Certificate> findByClaimCode(String claimCode);
 
+    List<Certificate> findCertificateByStudentId(Long studentId);
+
     List<Certificate> findCertificateByIssuer(String issuer);
 
     boolean existsByClaimCode(String claimCode);

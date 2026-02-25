@@ -29,7 +29,7 @@ public class Certificate extends BaseEntity {
     String studentName;
 
     @Column(name = "student_id", nullable = true)
-    String studentId;
+    Long studentId;
 
     @Column(name = "date_of_birth")
     LocalDate dateOfBirth;

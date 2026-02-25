@@ -25,7 +25,7 @@ public record CertificateResponse(
         String studentName,
 
         @JsonProperty("studentId")
-        String studentId,
+        Long studentId,
 
         @JsonProperty("dateOfBirth")
         LocalDate dateOfBirth,

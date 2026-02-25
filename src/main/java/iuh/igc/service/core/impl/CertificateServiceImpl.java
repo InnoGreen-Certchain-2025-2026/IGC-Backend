@@ -51,6 +51,9 @@ public class CertificateServiceImpl implements CertificateService {
     @Value("${blockchain.issuer-name}")
     private String issuerName;
 
+    @Value("${aws.s3.domain}")
+    private String domain;
+
     /**
      * LUỒNG CHÍNH: Cấp chứng chỉ với PDF ký số
      */
@@ -116,8 +119,7 @@ public class CertificateServiceImpl implements CertificateService {
                     10 * 1024 * 1024  // maxFileSize = 10MB
             );
 
-            // Key cho S3 (không có domain)
-            String s3Key = folderName + "/" + filename;
+            String s3Key = s3Url.replace(domain + "/", "");
 
             log.info("✅ PDF uploaded to S3");
             log.info("   URL: {}", s3Url);
@@ -617,12 +619,30 @@ public class CertificateServiceImpl implements CertificateService {
     @Override
     @Transactional
     public CertificateResponse getCertificateByClaimCode(String claimCode) {
-        Certificate certificate = certificateRepository.findByClaimCode(claimCode)
-                .orElseThrow(() -> new RuntimeException("Certificate not found for claim code: " + claimCode));
+        User user = currentUserProvider.get();
+        Certificate certificate = certificateRepository
+                .findByClaimCode(claimCode)
+                .orElseThrow(() -> new RuntimeException("Invalid claim code"));
 
+        if (Boolean.TRUE.equals(certificate.getIsClaim())) {
+            throw new RuntimeException("Certificate has already been claimed");
+        }
+
+        certificate.setStudentId(user.getId());
         certificate.setIsClaim(true);
+
         certificate = certificateRepository.save(certificate);
 
+        log.info("Certificate claimed successfully by studentId: {}", user.getId());
+
         return mapToResponse(certificate);
+    }
+
+    @Override
+    public List<CertificateResponse> getAllCertificatesByStudentId() {
+        User user = currentUserProvider.get();
+        return certificateRepository.findCertificateByStudentId(user.getId()).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 }

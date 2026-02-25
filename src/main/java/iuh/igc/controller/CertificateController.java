@@ -248,4 +248,26 @@ public class CertificateController {
             return new ApiResponse<>("Failed to reactivate certificate", HttpStatus.INTERNAL_SERVER_ERROR.value());
         }
     }
+
+    @PostMapping("/claim")
+    public ApiResponse<CertificateResponse> claimCertificate(
+            @RequestParam String claimCode
+    ) {
+        log.info("📥 Claim request - code: {}", claimCode);
+
+        CertificateResponse response =
+                certificateService.getCertificateByClaimCode(claimCode);
+
+        return new ApiResponse<>(response);
+    }
+
+
+    @GetMapping("/my-certificates")
+    public ApiResponse<List<CertificateResponse>> getMyCertificates() {
+
+        List<CertificateResponse> responses =
+                certificateService.getAllCertificatesByStudentId();
+
+        return new ApiResponse<>(responses);
+    }
 }

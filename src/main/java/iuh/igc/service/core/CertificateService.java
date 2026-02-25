@@ -28,6 +28,8 @@ public interface CertificateService {
 
     List<CertificateResponse> getAllCertificates();
 
+    List<CertificateResponse> getAllCertificatesByStudentId();
+
     String generateClaimCode(String organizationCode);
 
     @Transactional
