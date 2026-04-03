@@ -1,6 +1,10 @@
 package iuh.igc.advice.handler;
 
 import iuh.igc.advice.base.ErrorCode;
+import iuh.igc.advice.exception.CertificateAlreadySignedException;
+import iuh.igc.advice.exception.CertificateNotFoundException;
+import iuh.igc.advice.exception.InvalidCertificateException;
+import iuh.igc.advice.exception.InvalidClaimCodeException;
 import iuh.igc.dto.base.ApiResponse;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -113,6 +117,34 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.BAD_REQUEST)
                 .body(new ApiResponse<>(e.getMessage(), HttpStatus.BAD_REQUEST.value()));
     }
+
+        @ExceptionHandler(value = CertificateNotFoundException.class)
+        public ResponseEntity<ApiResponse<Void>> handleCertificateNotFound(CertificateNotFoundException e) {
+                return ResponseEntity
+                                .status(HttpStatus.NOT_FOUND)
+                                .body(new ApiResponse<>(e.getMessage(), HttpStatus.NOT_FOUND.value()));
+        }
+
+        @ExceptionHandler(value = CertificateAlreadySignedException.class)
+        public ResponseEntity<ApiResponse<Void>> handleCertificateAlreadySigned(CertificateAlreadySignedException e) {
+                return ResponseEntity
+                                .status(HttpStatus.CONFLICT)
+                                .body(new ApiResponse<>(e.getMessage(), HttpStatus.CONFLICT.value()));
+        }
+
+        @ExceptionHandler(value = InvalidCertificateException.class)
+        public ResponseEntity<ApiResponse<Void>> handleInvalidCertificate(InvalidCertificateException e) {
+                return ResponseEntity
+                                .status(HttpStatus.BAD_REQUEST)
+                                .body(new ApiResponse<>(e.getMessage(), HttpStatus.BAD_REQUEST.value()));
+        }
+
+        @ExceptionHandler(value = InvalidClaimCodeException.class)
+        public ResponseEntity<ApiResponse<Void>> handleInvalidClaimCode(InvalidClaimCodeException e) {
+                return ResponseEntity
+                                .status(HttpStatus.BAD_REQUEST)
+                                .body(new ApiResponse<>(e.getMessage(), HttpStatus.BAD_REQUEST.value()));
+        }
     // =========================================================================
     // GROUP 3: VALIDATION (12xx)
     // =========================================================================

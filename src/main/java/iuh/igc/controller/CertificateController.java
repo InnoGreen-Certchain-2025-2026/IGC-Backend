@@ -1,20 +1,27 @@
 package iuh.igc.controller;
 
-import iuh.igc.dto.request.core.CertificateRequest;
+import iuh.igc.dto.base.ApiResponse;
+import iuh.igc.dto.request.core.CreateDraftRequest;
+import iuh.igc.dto.request.core.SignCertificateRequest;
+import iuh.igc.dto.request.core.SignaturePosition;
+import iuh.igc.dto.response.core.CertificateDownloadResponse;
 import iuh.igc.dto.response.core.CertificateResponse;
+import iuh.igc.dto.response.core.VerifyResponse;
 import iuh.igc.service.core.CertificateService;
+import iuh.igc.service.core.ClaimService;
+import iuh.igc.service.core.DraftCertificateService;
+import iuh.igc.service.core.SigningService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @RestController
@@ -23,119 +30,118 @@ import java.util.Map;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class CertificateController {
 
-
+    DraftCertificateService draftCertificateService;
+    SigningService signingService;
+    ClaimService claimService;
     CertificateService certificateService;
 
-    /**
-     * Cấp chứng chỉ mới
-     * POST /api/certificates
-     */
-    @PostMapping
-    public ResponseEntity<?> issueCertificate(@Valid @RequestBody CertificateRequest request) {
-        try {
-            log.info("📥 Received request to issue certificate: {}", request.getCertificateId());
-            CertificateResponse response = certificateService.issueCertificate(request);
-
-            Map<String, Object> result = new HashMap<>();
-            result.put("success", true);
-            result.put("message", "Certificate issued successfully");
-            result.put("data", response);
-
-            return ResponseEntity.status(HttpStatus.CREATED).body(result);
-
-        } catch (Exception e) {
-            log.error("❌ Error issuing certificate", e);
-
-            Map<String, Object> error = new HashMap<>();
-            error.put("success", false);
-            error.put("message", "Failed to issue certificate");
-            error.put("error", e.getMessage());
-
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-        }
+    @PostMapping("/draft")
+    public ApiResponse<CertificateResponse> createDraftCertificate(
+            @Valid @RequestBody CreateDraftRequest request
+    ) {
+        log.info("Create draft certificate request: {}", request.certificateId());
+        return new ApiResponse<>(draftCertificateService.createDraft(request));
     }
 
-    /**
-     * Lấy tất cả chứng chỉ
-     * GET /api/certificates
-     */
-    @GetMapping
-    public ResponseEntity<?> getAllCertificates() {
-        try {
-            List<CertificateResponse> certificates = certificateService.getAllCertificates();
-
-            Map<String, Object> result = new HashMap<>();
-            result.put("success", true);
-            result.put("count", certificates.size());
-            result.put("data", certificates);
-
-            return ResponseEntity.ok(result);
-
-        } catch (Exception e) {
-            log.error("❌ Error getting certificates", e);
-
-            Map<String, Object> error = new HashMap<>();
-            error.put("success", false);
-            error.put("message", "Failed to retrieve certificates");
-            error.put("error", e.getMessage());
-
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-        }
+    @GetMapping("/drafts")
+    public ApiResponse<List<CertificateResponse>> getDraftCertificates() {
+        return new ApiResponse<>(draftCertificateService.getDraftCertificates());
     }
 
-    /**
-     * Lấy chứng chỉ theo ID
-     * GET /api/certificates/{certificateId}
-     */
-    @GetMapping("/{certificateId}")
-    public ResponseEntity<?> getCertificateById(@PathVariable String certificateId) {
-        try {
-            CertificateResponse certificate = certificateService.getCertificateById(certificateId);
-
-            Map<String, Object> result = new HashMap<>();
-            result.put("success", true);
-            result.put("data", certificate);
-
-            return ResponseEntity.ok(result);
-
-        } catch (Exception e) {
-            log.error("❌ Error getting certificate", e);
-
-            Map<String, Object> error = new HashMap<>();
-            error.put("success", false);
-            error.put("message", "Certificate not found");
-            error.put("error", e.getMessage());
-
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
-        }
+    @GetMapping("/signed")
+    public ApiResponse<List<CertificateResponse>> getSignedCertificates() {
+        return new ApiResponse<>(draftCertificateService.getSignedCertificates());
     }
 
-    /**
-     * Thu hồi chứng chỉ
-     * DELETE /api/certificates/{certificateId}
-     */
-    @DeleteMapping("/{certificateId}")
-    public ResponseEntity<?> revokeCertificate(@PathVariable String certificateId) {
-        try {
-            log.info("📥 Received request to revoke certificate: {}", certificateId);
-            CertificateResponse response = certificateService.revokeCertificate(certificateId);
-
-            Map<String, Object> result = new HashMap<>();
-            result.put("success", true);
-            result.put("message", "Certificate revoked successfully");
-            result.put("data", response);
-
-            return ResponseEntity.ok(result);
-
-        } catch (Exception e) {
-            log.error("❌ Error revoking certificate", e);
-
-            Map<String, Object> error = new HashMap<>();
-            error.put("success", false);
-            error.put("message", "Failed to revoke certificate");
-            error.put("error", e.getMessage());
-
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-        }
+    @GetMapping("/revoked")
+    public ApiResponse<List<CertificateResponse>> getRevokedCertificates() {
+        return new ApiResponse<>(draftCertificateService.getRevokedCertificates());
     }
+
+    @GetMapping("/my-certificates")
+    public ApiResponse<List<CertificateResponse>> getMyCertificates() {
+        return new ApiResponse<>(certificateService.getAllCertificatesByStudentId());
+    }
+
+    @PostMapping(value = "/{certificateId}/sign", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<CertificateResponse> signCertificate(
+            @PathVariable String certificateId,
+            @RequestPart("signatureImage") MultipartFile signatureImage,
+            @RequestPart("userCertificate") MultipartFile userCertificate,
+            @RequestParam("certificatePassword") String certificatePassword,
+            @RequestParam("x") Float x,
+            @RequestParam("y") Float y,
+            @RequestParam("width") Float width,
+            @RequestParam("height") Float height
+    ) {
+        SignCertificateRequest request = new SignCertificateRequest(
+                signatureImage,
+                userCertificate,
+                certificatePassword,
+                new SignaturePosition(x, y, width, height)
+        );
+        return new ApiResponse<>(signingService.signCertificate(certificateId, request));
+    }
+
+    @GetMapping("/{certificateId}/verify")
+    public ApiResponse<VerifyResponse> verifyCertificate(@PathVariable String certificateId) {
+        return new ApiResponse<>(certificateService.verifyCertificate(certificateId));
+    }
+
+    @PostMapping(value = "/verify/file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<VerifyResponse> verifyCertificateByFile(
+            @RequestPart("pdfFile") MultipartFile pdfFile
+    ) {
+        return new ApiResponse<>(certificateService.verifyCertificateByFile(pdfFile));
+    }
+
+    @DeleteMapping("/{certificateId}/revoke")
+    public ApiResponse<CertificateResponse> revokeCertificate(
+            @PathVariable String certificateId
+    ) {
+        return new ApiResponse<>(signingService.revokeCertificate(certificateId));
+    }
+
+    @PostMapping("/{certificateId}/reissue")
+    public ApiResponse<CertificateResponse> reissueCertificate(
+            @PathVariable String certificateId
+    ) {
+        return new ApiResponse<>(draftCertificateService.reissueCertificate(certificateId));
+    }
+
+    @PostMapping("/claim/{claimCode}")
+    public ApiResponse<CertificateResponse> claimCertificateOwnership(@PathVariable String claimCode) {
+        return new ApiResponse<>(claimService.claimCertificate(claimCode));
+    }
+
+    @GetMapping("/claim/{claimCode}")
+    public ApiResponse<CertificateResponse> claimCertificate(@PathVariable String claimCode) {
+        return new ApiResponse<>(claimService.getCertificateByClaimCode(claimCode));
+    }
+
+    @GetMapping("/claim/{claimCode}/download")
+    public ResponseEntity<byte[]> downloadClaimCertificate(
+            @PathVariable String claimCode
+    ) {
+        CertificateDownloadResponse response = claimService.downloadCertificateByClaimCode(claimCode);
+
+        return ResponseEntity.ok()
+                .header("Content-Disposition",
+                        "attachment; filename=\"" + response.filename() + "\"")
+                .header("Content-Type", "application/pdf")
+                .body(response.bytes());
+    }
+
+            @GetMapping("/{certificateId}/download")
+            public ResponseEntity<byte[]> downloadMyCertificate(
+                @PathVariable String certificateId
+            ) {
+            CertificateDownloadResponse response = certificateService.downloadCertificate(certificateId);
+
+            return ResponseEntity.ok()
+                .header("Content-Disposition",
+                    "attachment; filename=\"" + response.filename() + "\"")
+                .header("Content-Type", "application/pdf")
+                .body(response.bytes());
+            }
 }

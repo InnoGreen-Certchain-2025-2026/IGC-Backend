@@ -10,10 +10,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.ResponseBytes;
+import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.InputStream;
 import java.util.Objects;
@@ -137,5 +138,32 @@ public class S3Service {
         return folderName + "/" + fileName;
 
     }
+
+    /**
+     * Download file as byte array từ S3
+     * @param key S3 object key (path)
+     * @return byte array của file
+     */
+    public byte[] downloadFileAsBytes(String key) {
+
+        try {
+            GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                    .bucket(awsBucketName)
+                    .key(key)
+                    .build();
+
+            ResponseBytes<GetObjectResponse> objectBytes =
+                    s3Client.getObjectAsBytes(getObjectRequest);
+
+            return objectBytes.asByteArray();
+
+        } catch (NoSuchKeyException e) {
+            throw new RuntimeException("File not found in S3");
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to download file from S3", e);
+        }
+    }
+
+
 
 }

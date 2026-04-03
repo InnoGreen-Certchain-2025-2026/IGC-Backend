@@ -4,31 +4,83 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import iuh.igc.entity.constant.CertificateStatus;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class CertificateResponse {
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-    private Long id;
-    private String certificateId;
-    private String studentName;
-    private String studentId;
-    private LocalDate dateOfBirth;
-    private String major;
-    private Integer graduationYear;
-    private Double gpa;
-    private String certificateType;
-    private String issuer;
-    private LocalDate issueDate;
-    private String documentHash;
-    private String blockchainTxHash;
-    private Long blockchainBlockNumber;
-    private Long blockchainTimestamp;
-    private Boolean isValid;
-    private LocalDateTime createdAt;
-}
+@Builder
+public record CertificateResponse(
+
+        @JsonProperty("id")
+        Long id,
+
+        @JsonProperty("certificateId")
+        String certificateId,
+
+        @JsonProperty("studentName")
+        String studentName,
+
+        @JsonProperty("studentId")
+        Long studentId,
+
+        @JsonProperty("dateOfBirth")
+        LocalDate dateOfBirth,
+
+        @JsonProperty("major")
+        String major,
+
+        @JsonProperty("graduationYear")
+        Integer graduationYear,
+
+        @JsonProperty("gpa")
+        Double gpa,
+
+        @JsonProperty("certificateType")
+        String certificateType,
+
+        @JsonProperty("issuer")
+        String issuer,
+
+        @JsonProperty("issueDate")
+        LocalDate issueDate,
+
+        @JsonProperty("signPdfHash")
+        String signedPdfHash,
+
+        @JsonProperty("blockchainTxHash")
+        String blockchainTxHash,
+
+        @JsonProperty("blockchainBlockNumber")
+        Long blockchainBlockNumber,
+
+        @JsonProperty("blockchainTimestamp")
+        Long blockchainTimestamp,
+
+        @JsonProperty("isValid")
+        Boolean isValid,
+
+        @JsonProperty("status")
+        CertificateStatus status,
+
+        @JsonProperty("claimCode")
+        String claimCode,
+
+        @JsonProperty("claimCodeExpiresAt")
+        LocalDateTime claimCodeExpiresAt,
+
+        @JsonProperty("draftPdfS3Path")
+        String draftPdfS3Path,
+
+        @JsonProperty("signedPdfS3Path")
+        String signedPdfS3Path,
+
+        @JsonProperty("downloadUrl")
+        String downloadUrl,
+
+        @JsonProperty("createdAt")
+        LocalDateTime createdAt
+
+) {}
