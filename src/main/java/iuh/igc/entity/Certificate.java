@@ -1,6 +1,7 @@
 package iuh.igc.entity;
 
 import iuh.igc.entity.base.BaseEntity;
+import iuh.igc.entity.constant.CertificateStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -9,7 +10,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "certificates")
+@Table(
+    name = "certificates",
+    indexes = {
+        @Index(name = "idx_certificate_status", columnList = "status"),
+        @Index(name = "idx_certificate_claim_code", columnList = "claim_code")
+    }
+)
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -58,6 +65,12 @@ public class Certificate extends BaseEntity {
     @Column(name = "pdf_s3_path")
     private String pdfS3Path;
 
+    @Column(name = "draft_pdf_s3_path")
+    private String draftPdfS3Path;
+
+    @Column(name = "signed_pdf_s3_path")
+    private String signedPdfS3Path;
+
     @Column(name = "pdf_s3_url")
     private String pdfS3Url;
 
@@ -87,8 +100,15 @@ public class Certificate extends BaseEntity {
     @Column(name = "is_valid")
     Boolean isValid = true;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    CertificateStatus status = CertificateStatus.DRAFT;
+
     @Column(name = "claim_code", unique = true)
     String claimCode;
+
+    @Column(name = "claim_code_expires_at")
+    LocalDateTime claimCodeExpiresAt;
 
     @Column(name = "is_claim")
     Boolean isClaim;

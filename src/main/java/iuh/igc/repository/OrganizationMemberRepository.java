@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -34,4 +35,6 @@ public interface OrganizationMemberRepository extends JpaRepository<@NonNull Org
             Long userId,
             Collection<OrganizationRole> organizationRoles
     );
+
+        List<OrganizationMember> findByUser_IdAndOrganizationRoleIn(Long userId, Collection<OrganizationRole> roles);
 }

@@ -67,10 +67,10 @@ public class BlockchainServiceImpl implements BlockchainService {
             String clientVersion = web3j.web3ClientVersion().send().getWeb3ClientVersion();
             BigInteger blockNumber = web3j.ethBlockNumber().send().getBlockNumber();
 
-            log.info("✅ Connected to Besu: {}", clientVersion);
-            log.info("📋 Contract Address: {}", contractAddress);
-            log.info("🔑 Admin Address: {}", credentials.getAddress());
-            log.info("📦 Current Block: {}", blockNumber);
+            log.info("Connected to Besu: {}", clientVersion);
+            log.info("Contract Address: {}", contractAddress);
+            log.info("Admin Address: {}", credentials.getAddress());
+            log.info("Current Block: {}", blockNumber);
         } catch (Exception e) {
             log.error("❌ Failed to connect to blockchain", e);
         }
@@ -79,7 +79,7 @@ public class BlockchainServiceImpl implements BlockchainService {
     @Override
     public TransactionReceipt issueCertificate(String certificateId, String documentHash) {
         try {
-            log.info("📝 Issuing certificate: {}", certificateId);
+            log.info("Issuing certificate: {}", certificateId);
 
             byte[] hashBytes = hexStringToByteArray(documentHash);
 
@@ -103,17 +103,17 @@ public class BlockchainServiceImpl implements BlockchainService {
             }
 
             String txHash = transactionResponse.getTransactionHash();
-            log.info("📤 Transaction sent: {}", txHash);
+            log.info("Transaction sent: {}", txHash);
 
             TransactionReceipt receipt = waitForReceipt(txHash);
 
-            log.info("✅ Certificate issued - Block: {}, Gas: {}",
+            log.info("Certificate issued - Block: {}, Gas: {}",
                     receipt.getBlockNumber(), receipt.getGasUsed());
 
             return receipt;
 
         } catch (Exception e) {
-            log.error("❌ Failed to issue certificate", e);
+            log.error("Failed to issue certificate", e);
             throw new RuntimeException("Blockchain transaction failed: " + e.getMessage(), e);
         }
     }
@@ -121,7 +121,7 @@ public class BlockchainServiceImpl implements BlockchainService {
     @Override
     public BlockchainService.VerificationResult verifyCertificate(String certificateId) {
         try {
-            log.info("🔍 Verifying certificate: {}", certificateId);
+            log.info("Verifying certificate: {}", certificateId);
 
             Function function = new Function(
                     "verifyCertificate",
@@ -157,7 +157,7 @@ public class BlockchainServiceImpl implements BlockchainService {
 
             String hash = bytesToHex(hashBytes);
 
-            log.info("✅ Verified - Valid: {}", isValid);
+            log.info("Verified - Valid: {}", isValid);
 
             return VerificationResultImpl.builder()
                     .certificateId(certId)
@@ -167,7 +167,7 @@ public class BlockchainServiceImpl implements BlockchainService {
                     .build();
 
         } catch (Exception e) {
-            log.error("❌ Verification failed", e);
+            log.error("Verification failed", e);
             return VerificationResultImpl.builder()
                     .certificateId(certificateId)
                     .isValid(false)
@@ -178,7 +178,7 @@ public class BlockchainServiceImpl implements BlockchainService {
     @Override
     public TransactionReceipt revokeCertificate(String certificateId) {
         try {
-            log.info("🚫 Revoking certificate: {}", certificateId);
+            log.info("Revoking certificate: {}", certificateId);
 
             Function function = new Function(
                     "revokeCertificate",
@@ -195,11 +195,11 @@ public class BlockchainServiceImpl implements BlockchainService {
             String txHash = transactionResponse.getTransactionHash();
             TransactionReceipt receipt = waitForReceipt(txHash);
 
-            log.info("✅ Certificate revoked");
+            log.info("Certificate revoked");
             return receipt;
 
         } catch (Exception e) {
-            log.error("❌ Revocation failed", e);
+            log.error("Revocation failed", e);
             throw new RuntimeException("Failed to revoke certificate", e);
         }
     }
@@ -207,7 +207,7 @@ public class BlockchainServiceImpl implements BlockchainService {
     @Override
     public TransactionReceipt reactivateCertificate(String certificateId) {
         try {
-            log.info("♻️ Reactivating certificate: {}", certificateId);
+            log.info("Reactivating certificate: {}", certificateId);
 
             Function function = new Function(
                     "reactivateCertificate",
@@ -224,11 +224,11 @@ public class BlockchainServiceImpl implements BlockchainService {
             String txHash = transactionResponse.getTransactionHash();
             TransactionReceipt receipt = waitForReceipt(txHash);
 
-            log.info("✅ Certificate reactivated");
+            log.info("Certificate reactivated");
             return receipt;
 
         } catch (Exception e) {
-            log.error("❌ Reactivation failed", e);
+            log.error("Reactivation failed", e);
             throw new RuntimeException("Failed to reactivate certificate", e);
         }
     }

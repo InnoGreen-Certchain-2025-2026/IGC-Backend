@@ -37,4 +37,6 @@ public interface OrganizationRepository extends JpaRepository<@NonNull Organizat
 
     Optional<Organization> findByIdAndOrganizationMembers_User_Id(Long id, Long userId);
 
+    Optional<Organization> findByCode(String code);
+
 }

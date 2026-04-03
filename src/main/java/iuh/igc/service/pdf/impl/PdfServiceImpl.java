@@ -1,21 +1,26 @@
 package iuh.igc.service.pdf.impl;
 
 import com.itextpdf.io.font.PdfEncodings;
+import com.itextpdf.io.image.ImageData;
+import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.io.source.ByteArrayOutputStream;
 import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfReader;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 import iuh.igc.dto.request.core.CertificateRequest;
+import iuh.igc.dto.request.core.SignaturePosition;
 import iuh.igc.service.pdf.PdfService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -192,6 +197,37 @@ public class PdfServiceImpl implements PdfService {
             throw new RuntimeException("PDF generation failed: " + e.getMessage(), e);
         }
     }
+
+        @Override
+        public byte[] addSignatureImageToPdf(byte[] pdfBytes, byte[] imageBytes, SignaturePosition position) {
+                try {
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+                        PdfDocument pdfDocument = new PdfDocument(
+                                        new PdfReader(new java.io.ByteArrayInputStream(pdfBytes)),
+                                        new PdfWriter(baos)
+                        );
+
+                        Document document = new Document(pdfDocument);
+                        ImageData imageData = ImageDataFactory.create(imageBytes);
+                        Image image = new Image(imageData)
+                                        .setFixedPosition(
+                                                        1,
+                                                        position.x(),
+                                                        position.y(),
+                                                        position.width()
+                                        )
+                                        .setHeight(position.height());
+
+                        document.add(image);
+                        document.close();
+
+                        return baos.toByteArray();
+                } catch (Exception e) {
+                        log.error("Failed to add signature image to PDF", e);
+                        throw new RuntimeException("Failed to add signature image to PDF", e);
+                }
+        }
 
 }
 

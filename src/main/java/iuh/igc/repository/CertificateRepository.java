@@ -1,6 +1,7 @@
 package iuh.igc.repository;
 
 import iuh.igc.entity.Certificate;
+import iuh.igc.entity.constant.CertificateStatus;
 import org.jspecify.annotations.NonNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -17,11 +18,17 @@ public interface CertificateRepository extends JpaRepository<@NonNull Certificat
 
     Optional<Certificate> findByClaimCode(String claimCode);
 
+    Optional<Certificate> findByClaimCodeAndStatus(String claimCode, CertificateStatus status);
+
     List<Certificate> findCertificateByStudentId(Long studentId);
 
     List<Certificate> findCertificateByIssuer(String issuer);
 
+    List<Certificate> findByStatus(CertificateStatus status);
+
     boolean existsByClaimCode(String claimCode);
 
     boolean existsByCertificateId(String certificateId);
+
+    long countByCertificateIdStartingWith(String prefix);
 }

@@ -7,6 +7,7 @@ import iuh.igc.dto.response.core.CertificateResponse;
 import iuh.igc.dto.response.core.VerifyResponse;
 import iuh.igc.entity.Certificate;
 import iuh.igc.entity.User;
+import iuh.igc.entity.constant.CertificateStatus;
 import iuh.igc.entity.organization.Organization;
 import iuh.igc.repository.CertificateRepository;
 import iuh.igc.repository.OrganizationMemberRepository;
@@ -143,13 +144,16 @@ public class CertificateServiceImpl implements CertificateService {
                     .issueDate(request.issueDate())
                     .pdfFilename(filename)
                     .pdfS3Path(s3Key)
+                    .signedPdfS3Path(s3Key)
                     .pdfS3Url(s3Url)
                     .pdfSizeBytes((long) signedPdf.length)
                     .signedPdfHash(signedPdfHash)
                     .signatureTimestamp(LocalDateTime.now())
                     .signerName(organization.getName())
                     .isValid(true)
+                    .status(CertificateStatus.SIGNED)
                     .claimCode(generateClaimCode(organization.getCode()))
+                    .claimCodeExpiresAt(LocalDateTime.now().plusDays(30))
                     .isClaim(false)
                     .build();
 
@@ -542,6 +546,7 @@ public class CertificateServiceImpl implements CertificateService {
 
         // Cập nhật database
         certificate.setIsValid(false);
+        certificate.setStatus(CertificateStatus.REVOKED);
         certificate = certificateRepository.save(certificate);
 
         log.info("✅ Certificate revoked successfully");
@@ -566,6 +571,7 @@ public class CertificateServiceImpl implements CertificateService {
 
         // Cập nhật database
         certificate.setIsValid(true);
+        certificate.setStatus(CertificateStatus.SIGNED);
         certificate = certificateRepository.save(certificate);
 
         log.info("✅ Certificate reactivated successfully");

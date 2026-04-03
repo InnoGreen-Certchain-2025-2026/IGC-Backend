@@ -63,6 +63,14 @@ public interface CertificateService {
                 .blockchainBlockNumber(certificate.getBlockchainBlockNumber())
                 .blockchainTimestamp(certificate.getBlockchainTimestamp())
                 .isValid(certificate.getIsValid())
+                .status(certificate.getStatus())
+                .claimCode(certificate.getClaimCode())
+                .claimCodeExpiresAt(certificate.getClaimCodeExpiresAt())
+                .draftPdfS3Path(certificate.getDraftPdfS3Path())
+                .signedPdfS3Path(certificate.getSignedPdfS3Path())
+                .downloadUrl(certificate.getClaimCode() == null
+                    ? null
+                    : "/api/certificates/claim/" + certificate.getClaimCode() + "/download")
                 .createdAt(certificate.getCreatedAt())
                 .build();
     }

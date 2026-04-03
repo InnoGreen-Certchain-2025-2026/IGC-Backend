@@ -4,13 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import iuh.igc.entity.constant.CertificateStatus;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Builder
 public record CertificateResponse(
@@ -62,6 +61,24 @@ public record CertificateResponse(
 
         @JsonProperty("isValid")
         Boolean isValid,
+
+        @JsonProperty("status")
+        CertificateStatus status,
+
+        @JsonProperty("claimCode")
+        String claimCode,
+
+        @JsonProperty("claimCodeExpiresAt")
+        LocalDateTime claimCodeExpiresAt,
+
+        @JsonProperty("draftPdfS3Path")
+        String draftPdfS3Path,
+
+        @JsonProperty("signedPdfS3Path")
+        String signedPdfS3Path,
+
+        @JsonProperty("downloadUrl")
+        String downloadUrl,
 
         @JsonProperty("createdAt")
         LocalDateTime createdAt

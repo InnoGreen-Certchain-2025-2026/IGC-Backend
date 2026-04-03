@@ -8,5 +8,7 @@ public interface DigitalSignatureService {
 
     byte[] signPdf(byte[] pdfBytes, String certificateId);
 
+    byte[] signPdfWithUserCertificate(byte[] pdfBytes, byte[] pkcs12Bytes, String password);
+
     boolean verifyPdfSignature(byte[] signedPdfBytes);
 }

@@ -2,6 +2,7 @@ package iuh.igc.service.pdf.impl;
 
 
 import com.itextpdf.kernel.pdf.PdfDocument;
+import iuh.igc.advice.exception.InvalidCertificateException;
 import iuh.igc.service.pdf.DigitalSignatureService;
 import jakarta.annotation.PostConstruct;
 import lombok.Builder;
@@ -18,13 +19,14 @@ import org.springframework.core.io.ResourceLoader;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.Security;
+import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
-import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Enumeration;
 
 @Slf4j
 @Service
@@ -145,6 +147,79 @@ public class DigitalSignatureServiceImpl implements DigitalSignatureService {
             log.error("❌ Failed to sign PDF", e);
             throw new RuntimeException("PDF signing failed: " + e.getMessage(), e);
         }
+    }
+
+    @Override
+    public byte[] signPdfWithUserCertificate(byte[] pdfBytes, byte[] pkcs12Bytes, String password) {
+        try {
+            Security.addProvider(new BouncyCastleProvider());
+
+            KeyStore keyStore = KeyStore.getInstance("PKCS12");
+            keyStore.load(new ByteArrayInputStream(pkcs12Bytes), password.toCharArray());
+
+            String alias = findFirstPrivateKeyAlias(keyStore);
+            if (alias == null) {
+                throw new InvalidCertificateException("No private key found in uploaded certificate");
+            }
+
+            PrivateKey userPrivateKey = (PrivateKey) keyStore.getKey(alias, password.toCharArray());
+            Certificate[] userChain = keyStore.getCertificateChain(alias);
+
+            if (userPrivateKey == null || userChain == null || userChain.length == 0) {
+                throw new InvalidCertificateException("Invalid user certificate or password");
+            }
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            PdfReader reader = new PdfReader(new ByteArrayInputStream(pdfBytes));
+            PdfSigner signer = new PdfSigner(reader, baos, new StampingProperties());
+
+            PdfSignatureAppearance appearance = signer.getSignatureAppearance();
+            appearance.setReason(signatureReason);
+            appearance.setLocation(signatureLocation);
+            appearance.setReuseAppearance(false);
+
+            IExternalSignature pks = new PrivateKeySignature(
+                    userPrivateKey,
+                    DigestAlgorithms.SHA256,
+                    BouncyCastleProvider.PROVIDER_NAME
+            );
+
+            IExternalDigest digest = new BouncyCastleDigest();
+
+            signer.signDetached(
+                    digest,
+                    pks,
+                    userChain,
+                    null,
+                    null,
+                    null,
+                    0,
+                    PdfSigner.CryptoStandard.CMS
+            );
+
+            return baos.toByteArray();
+
+        } catch (UnrecoverableKeyException e) {
+            throw new InvalidCertificateException("Invalid certificate password");
+        } catch (IOException e) {
+            throw new InvalidCertificateException("Unable to read user certificate. Check file and password");
+        } catch (InvalidCertificateException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Failed to sign PDF with user certificate", e);
+            throw new RuntimeException("Failed to sign PDF with user certificate", e);
+        }
+    }
+
+    private String findFirstPrivateKeyAlias(KeyStore keyStore) throws Exception {
+        Enumeration<String> aliases = keyStore.aliases();
+        while (aliases.hasMoreElements()) {
+            String alias = aliases.nextElement();
+            if (keyStore.isKeyEntry(alias)) {
+                return alias;
+            }
+        }
+        return null;
     }
 
     /**
