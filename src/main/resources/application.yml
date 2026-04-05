@@ -21,7 +21,6 @@ spring:
         options:
           model: ${OPENAI_CHAT_MODEL}
 
-
 server:
   port: 8080
 
