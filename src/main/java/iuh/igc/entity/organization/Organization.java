@@ -1,5 +1,6 @@
 package iuh.igc.entity.organization;
 
+import iuh.igc.entity.Signature;
 import iuh.igc.entity.base.BaseEntity;
 import iuh.igc.entity.constant.ServicePlan;
 import jakarta.persistence.*;
@@ -108,5 +109,7 @@ public class Organization extends BaseEntity {
     @OneToMany(mappedBy = "organization", fetch = FetchType.LAZY)
     List<OrganizationMember> organizationMembers;
 
+    @OneToMany(mappedBy = "organization", fetch = FetchType.LAZY)
+    List<Signature> signatures;
 
 }
