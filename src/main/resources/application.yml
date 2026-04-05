@@ -1,13 +1,11 @@
 spring:
   application:
     name: igc-backend
-
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
-
   jpa:
     hibernate:
       ddl-auto: update
@@ -16,6 +14,12 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          model: ${OPENAI_CHAT_MODEL}
 
   ai:
     openai:
@@ -28,11 +32,25 @@ server:
   port: 8080
 
 blockchain:
-  rpc-url: http://localhost:8548
+  rpc-url: ${BLOCKCHAIN_RPC_URL}
   chain-id: 1337
   contract-address: ${BLOCKCHAIN_CONTRACT_ADDRESS}
   admin-private-key: ${BLOCKCHAIN_ADMIN_PRIVATE_KEY}
   issuer-name: "IUH"
+
+signature:
+  keystore-path: classpath:keystore/certificate.p12
+  keystore-password: ${SIGNATURE_KEYSTORE_PASSWORD}
+  key-alias: ${SIGNATURE_KEY_ALIAS}
+  reason: "Certificate Issued by University"
+  location: "Vietnam"
+
+certificate:
+  template:
+    logo-path: classpath:templates/logo.png
+    background-color: "#1a237e"
+    primary-color: "#3f51b5"
+    secondary-color: "#757de8"
 
 security:
   cors:
@@ -46,8 +64,10 @@ security:
     secure: "true"
     refresh-token-name: "refresh_token"
 
-logging:
-  level:
-    root: INFO
-    com.certificate.blockchain: DEBUG
-    org.web3j: DEBUG
+aws:
+  access-key: ${AWS_ACCESS_KEY}
+  secret-key: ${AWS_SECRET_KEY}
+  s3:
+    bucket-name: ${AWS_BUCKET_NAME}
+    domain: ${AWS_DOMAIN}
+    region: ${AWS_REGION}
