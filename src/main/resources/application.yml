@@ -31,6 +31,7 @@ blockchain:
   admin-private-key: ${BLOCKCHAIN_ADMIN_PRIVATE_KEY}
   issuer-name: "IUH"
 
+# Digital Signature Configuration
 signature:
   keystore-path: classpath:keystore/certificate.p12
   keystore-password: ${SIGNATURE_KEYSTORE_PASSWORD}
@@ -38,6 +39,7 @@ signature:
   reason: "Certificate Issued by University"
   location: "Vietnam"
 
+# Certificate PDF Template
 certificate:
   template:
     logo-path: classpath:templates/logo.png
@@ -65,9 +67,15 @@ aws:
     domain: ${AWS_DOMAIN}
     region: ${AWS_REGION}
 
+logging:
+  level:
+    root: INFO
+    com.certificate.blockchain: DEBUG
+    org.web3j: DEBUG
+
 springdoc:
   api-docs:
-    enabled: true
+    enabled: false
     version: openapi_3_0
   swagger-ui:
-    enabled: true
+    enabled: false
