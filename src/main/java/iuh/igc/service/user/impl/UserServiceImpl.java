@@ -42,7 +42,8 @@ public class UserServiceImpl implements UserService {
                 user.getId(),
                 user.getEmail(),
                 user.getName(),
-                user.getAvatarUrl()
+                user.getAvatarUrl(),
+                user.getCitizenIdNumber()
         );
     }
 

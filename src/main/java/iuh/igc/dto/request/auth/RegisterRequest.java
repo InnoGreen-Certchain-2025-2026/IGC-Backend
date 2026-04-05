@@ -2,6 +2,7 @@ package iuh.igc.dto.request.auth;
 
 import iuh.igc.entity.constant.Gender;
 import jakarta.validation.constraints.*;
+import org.hibernate.validator.constraints.Length;
 
 import java.time.LocalDate;
 
@@ -16,6 +17,10 @@ public record RegisterRequest(
 
         @NotBlank(message = "Tên người dùng không được để trống")
         String name,
+
+        @NotBlank(message = "Mã căn cước công dân không được để trống")
+        @Pattern(regexp = "^[0-9]{12}$", message = "Mã căn cước công dân phải có đúng 12 số")
+        String citizenIdNumber,
 
         @NotBlank(message = "Số điện thoại không được để trống")
         @Pattern(regexp = "^[0-9]{10,15}$", message = "Số điện thoại phải từ 10-15 số")
