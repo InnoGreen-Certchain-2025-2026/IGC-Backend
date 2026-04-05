@@ -26,6 +26,9 @@ public class User extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
+    @Column(name = "cognito_sub", unique = true)
+    String cognitoSub;
+
     @Column(unique = true)
     String email;
 
