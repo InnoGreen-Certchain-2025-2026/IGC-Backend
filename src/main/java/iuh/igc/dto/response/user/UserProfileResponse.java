@@ -15,6 +15,7 @@ public record UserProfileResponse(
         String phoneNumber,
         String address,
         LocalDate dob,
-        Gender gender
+        Gender gender,
+        String citizenIdNumber
 ) {
 }

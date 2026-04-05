@@ -56,7 +56,8 @@ public class UserServiceImpl implements UserService {
                 user.getPhoneNumber(),
                 user.getAddress(),
                 user.getDob(),
-                user.getGender()
+                user.getGender(),
+                user.getCitizenIdNumber()
         );
     }
 
