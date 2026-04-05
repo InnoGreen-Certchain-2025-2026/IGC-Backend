@@ -64,3 +64,10 @@ aws:
     bucket-name: ${AWS_BUCKET_NAME}
     domain: ${AWS_DOMAIN}
     region: ${AWS_REGION}
+
+springdoc:
+  api-docs:
+    enabled: true
+    version: openapi_3_0
+  swagger-ui:
+    enabled: true

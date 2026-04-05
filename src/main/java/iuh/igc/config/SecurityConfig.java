@@ -47,8 +47,9 @@ public class SecurityConfig {
             // Upload
             "/api/certificates/upload",
 
-            "/v3/api-docs",
-            "/swagger-ui"
+            // API DOCS
+            "/swagger-ui/**",
+            "/v3/api-docs/**",
 
     };
 
