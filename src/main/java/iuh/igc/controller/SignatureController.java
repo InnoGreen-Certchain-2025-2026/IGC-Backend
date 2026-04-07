@@ -33,61 +33,25 @@ public class SignatureController {
     @Autowired
     private OrganizationRepository organizationRepository;
 
-    @PostMapping("/check")
-    public ApiResponse<Map<String,Object>> checkSignature(
+
+    @PostMapping("/upload")
+    public ApiResponse<Boolean> uploadSignature(
             @RequestParam Long orgId,
-            @RequestParam(value = "file", required = false) MultipartFile file) {
-
-        if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("File is required");
-        }
-
-        try {
-            boolean isSignature = signatureService.isSignature(file);
-            if (!isSignature) {
-                throw new IllegalArgumentException("Uploaded file is not a valid signature");
-            }
-
-            String hash = hashService.hashBytes(file.getBytes());
-            boolean isUsed = signatureRepository.existsByOrganizationIdAndHash(orgId, hash);
-
-            // Trả về front, front tự quyết định
-            Map<String, Object> data = new HashMap<>();
-            data.put("hash", hash);
-            data.put("isUsed", isUsed); // true → front hiện cảnh báo
-
-            return new ApiResponse<>(data);
-
-        } catch (IOException e) {
-            throw new RuntimeException("Error processing file", e);
-        }
+            @RequestParam MultipartFile file
+    ){
+        signatureService.createSignature(orgId, file);
+        return new ApiResponse<>(true);
     }
 
-    // Front xác nhận rồi mới gọi, chỉ nhận hash
-    @PostMapping("/confirm")
-    public ApiResponse<Boolean> confirmSignature(
+    @PostMapping("/check")
+    public ApiResponse<Boolean> checkSignature(
             @RequestParam Long orgId,
-            @RequestParam String hash) {
-
-        //Xóa hash củ nếu trùng
-        if (signatureRepository.existsByOrganizationIdAndHash(orgId, hash)) {
-            signatureRepository.removeByOrganizationIdAndHash(orgId,hash);
+            @RequestParam MultipartFile file
+    ){
+        if(signatureService.checkSignatureIsUsed(file, orgId)){
+            return new ApiResponse<>(true);
+        } else {
+            return new ApiResponse<>(false);
         }
-        // Deactivate chữ ký cũ
-        List<Signature> oldSignatures = signatureRepository
-                .findByOrganizationIdAndIsActiveTrue(orgId);
-        oldSignatures.forEach(s -> s.setActive(false));
-        signatureRepository.saveAll(oldSignatures);
-
-        // Lưu chữ ký mới
-        Signature newSignature = Signature.builder()
-                .hash(hash)
-                .isActive(true)
-                .createdAt(LocalDateTime.now())
-                .organization(organizationRepository.getReferenceById(orgId))
-                .build();
-        signatureRepository.save(newSignature);
-
-        return new ApiResponse<>(true);
     }
 }
