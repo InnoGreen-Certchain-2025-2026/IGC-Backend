@@ -118,33 +118,33 @@ public class GlobalExceptionHandler {
                 .body(new ApiResponse<>(e.getMessage(), HttpStatus.BAD_REQUEST.value()));
     }
 
-        @ExceptionHandler(value = CertificateNotFoundException.class)
-        public ResponseEntity<ApiResponse<Void>> handleCertificateNotFound(CertificateNotFoundException e) {
-                return ResponseEntity
-                                .status(HttpStatus.NOT_FOUND)
-                                .body(new ApiResponse<>(e.getMessage(), HttpStatus.NOT_FOUND.value()));
-        }
+    @ExceptionHandler(value = CertificateNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleCertificateNotFound(CertificateNotFoundException e) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(new ApiResponse<>(e.getMessage(), HttpStatus.NOT_FOUND.value()));
+    }
 
-        @ExceptionHandler(value = CertificateAlreadySignedException.class)
-        public ResponseEntity<ApiResponse<Void>> handleCertificateAlreadySigned(CertificateAlreadySignedException e) {
-                return ResponseEntity
-                                .status(HttpStatus.CONFLICT)
-                                .body(new ApiResponse<>(e.getMessage(), HttpStatus.CONFLICT.value()));
-        }
+    @ExceptionHandler(value = CertificateAlreadySignedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleCertificateAlreadySigned(CertificateAlreadySignedException e) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(new ApiResponse<>(e.getMessage(), HttpStatus.CONFLICT.value()));
+    }
 
-        @ExceptionHandler(value = InvalidCertificateException.class)
-        public ResponseEntity<ApiResponse<Void>> handleInvalidCertificate(InvalidCertificateException e) {
-                return ResponseEntity
-                                .status(HttpStatus.BAD_REQUEST)
-                                .body(new ApiResponse<>(e.getMessage(), HttpStatus.BAD_REQUEST.value()));
-        }
+    @ExceptionHandler(value = InvalidCertificateException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidCertificate(InvalidCertificateException e) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ApiResponse<>(e.getMessage(), HttpStatus.BAD_REQUEST.value()));
+    }
 
-        @ExceptionHandler(value = InvalidClaimCodeException.class)
-        public ResponseEntity<ApiResponse<Void>> handleInvalidClaimCode(InvalidClaimCodeException e) {
-                return ResponseEntity
-                                .status(HttpStatus.BAD_REQUEST)
-                                .body(new ApiResponse<>(e.getMessage(), HttpStatus.BAD_REQUEST.value()));
-        }
+    @ExceptionHandler(value = InvalidClaimCodeException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidClaimCode(InvalidClaimCodeException e) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ApiResponse<>(e.getMessage(), HttpStatus.BAD_REQUEST.value()));
+    }
     // =========================================================================
     // GROUP 3: VALIDATION (12xx)
     // =========================================================================
@@ -182,6 +182,6 @@ public class GlobalExceptionHandler {
         ErrorCode error = ErrorCode.DATA_INTEGRITY_VIOLATION;
         return ResponseEntity
                 .status(error.getStatusCode())
-                .body(new ApiResponse<>(error.getMessage(), error.getCode()));
+                .body(new ApiResponse<>(e.getMessage(), error.getCode()));
     }
 }
