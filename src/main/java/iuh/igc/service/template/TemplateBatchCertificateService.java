@@ -253,7 +253,11 @@ public class TemplateBatchCertificateService {
 
                     Certificate certificate = Certificate.builder()
                             .certificateId(certificateId)
-                                .studentName(requiredValue(row, "studentname", rowNumber))
+                                .studentName(
+                                    optionalString(row.get("studentname")) != null 
+                                        ? optionalString(row.get("studentname")) 
+                                        : certificateId // Fallback to certificateId if studentName is null
+                                )
                                 .dateOfBirth(optionalDate(row.get("dateofbirth")))
                                 .major(optionalString(row.get("major")))
                                 .graduationYear(optionalInteger(row.get("graduationyear")))
@@ -481,7 +485,7 @@ public class TemplateBatchCertificateService {
             }
         }
 
-        List<String> requiredForCertificate = Arrays.asList("certificateid", "studentname");
+        List<String> requiredForCertificate = Arrays.asList("certificateid");
         for (String requiredColumn : requiredForCertificate) {
             if (!normalizedHeaders.contains(requiredColumn.toLowerCase(Locale.ROOT))) {
                 throw new IllegalArgumentException("Excel must contain column: " + requiredColumn);
