@@ -11,4 +11,6 @@ public interface SignatureRepository extends JpaRepository<Signature, Long> {
     Signature findByOrganizationIdAndIsActiveTrue(Long organizationId);
     Boolean existsByOrganizationIdAndHash(Long organizationId, String hash);
     Boolean removeByOrganizationIdAndHash(Long organizationId, String hash);
+    Signature findByHash(String hash);
+    List<Signature> findByOrganizationId(Long organizationId);
 }

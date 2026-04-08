@@ -54,4 +54,12 @@ public class SignatureController {
             return new ApiResponse<>(false);
         }
     }
+
+    @GetMapping("/exist")
+    public ApiResponse<Boolean> checkSignatureExist(
+            @RequestParam Long orgId
+    ) {
+        List<Signature> signatures = signatureRepository.findByOrganizationId(orgId);
+        return new ApiResponse<>(!signatures.isEmpty());
+    }
 }
