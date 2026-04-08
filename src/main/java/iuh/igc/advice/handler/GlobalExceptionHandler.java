@@ -184,4 +184,6 @@ public class GlobalExceptionHandler {
                 .status(error.getStatusCode())
                 .body(new ApiResponse<>(error.getMessage(), error.getCode()));
     }
+
+
 }

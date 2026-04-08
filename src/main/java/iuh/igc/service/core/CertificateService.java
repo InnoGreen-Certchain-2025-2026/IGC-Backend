@@ -14,6 +14,14 @@ public interface CertificateService {
     @Transactional
     CertificateResponse issueCertificate(CertificateRequest request, Long organizationId);
 
+    @Transactional
+    CertificateResponse issueCertificate(
+            CertificateRequest request,
+            Long organizationId,
+            MultipartFile userCertificate,
+            String certificatePassword
+    );
+
     VerifyResponse verifyCertificate(String certificateId);
 
     VerifyResponse verifyCertificateByFile(MultipartFile pdfFile);
