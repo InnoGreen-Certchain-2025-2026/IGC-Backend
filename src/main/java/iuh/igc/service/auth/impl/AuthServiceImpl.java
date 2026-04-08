@@ -74,6 +74,7 @@ public class AuthServiceImpl implements AuthService {
                 .builder()
                 .email(request.email().toLowerCase())
                 .name(request.name())
+                .citizenIdNumber(request.citizenIdNumber())
                 .phoneNumber(request.phoneNumber())
                 .address(request.address())
                 .dob(request.dob())
@@ -171,6 +172,7 @@ public class AuthServiceImpl implements AuthService {
                 .email(user.getEmail())
                 .name(user.getName())
                 .avatarUrl(user.getAvatarUrl())
+                .citizenIdNumber(user.getCitizenIdNumber())
                 .build();
 
         return new AuthResultWrapper(

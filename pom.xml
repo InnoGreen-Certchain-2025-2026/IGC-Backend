@@ -229,6 +229,26 @@
             <version>5.4.1</version>
         </dependency>
 
+        <!-- OpenCV -->
+<!--        <dependency>-->
+<!--            <groupId>org.bytedeco</groupId>-->
+<!--            <artifactId>opencv-platform</artifactId>-->
+<!--            <version>4.13.0-1.5.13</version>-->
+<!--        </dependency>-->
+<!--        &lt;!&ndash; Source: https://mvnrepository.com/artifact/org.bytedeco/javacpp &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>org.bytedeco</groupId>-->
+<!--            <artifactId>javacpp</artifactId>-->
+<!--            <version>1.5.13</version>-->
+<!--        </dependency>-->
+        <!-- Source: https://mvnrepository.com/artifact/org.openpnp/opencv -->
+        <dependency>
+            <groupId>org.openpnp</groupId>
+            <artifactId>opencv</artifactId>
+            <version>4.9.0-0</version>
+            <scope>compile</scope>
+        </dependency>
+
 
     </dependencies>
 

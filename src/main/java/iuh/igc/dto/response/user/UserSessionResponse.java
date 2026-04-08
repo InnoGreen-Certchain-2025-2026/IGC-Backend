@@ -11,6 +11,7 @@ public record UserSessionResponse(
         Long id,
         String email,
         String name,
-        String avatarUrl
+        String avatarUrl,
+        String citizenIdNumber
 ) {
 }
