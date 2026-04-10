@@ -285,4 +285,22 @@ public class SignatureServiceImpl implements SignatureService {
             throw new RuntimeException("Error processing file", e);
         }
     }
+
+    //Check if the signature is active (not deactivated by new upload)
+    public boolean checkSignatureIsActive(MultipartFile file, Long orgId) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("File is required");
+        }
+        if (!isSignature(file)) {
+            throw new IllegalArgumentException("Uploaded file is not a valid signature");
+        }
+
+        try {
+            String hash = hashService.hashBytes(file.getBytes());
+            Signature signature = signatureRepository.findByOrganizationIdAndHash(orgId, hash);
+            return signature != null && signature.isActive();
+        } catch (IOException e) {
+            throw new RuntimeException("Error processing file", e);
+        }
+    }
 }
