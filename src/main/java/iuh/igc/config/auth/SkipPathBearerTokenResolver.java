@@ -20,7 +20,8 @@ public class SkipPathBearerTokenResolver implements BearerTokenResolver {
     BearerTokenResolver delegate = new DefaultBearerTokenResolver();
     static final List<String> SKIP_PATHS = List.of(
             "/auth/logout",
-            "/auth/register"
+            "/auth/register",
+            "/auth/sync"
     );
 
     @Override
