@@ -22,6 +22,7 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.bind.MissingRequestCookieException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.sql.SQLIntegrityConstraintViolationException;
@@ -110,6 +111,21 @@ public class GlobalExceptionHandler {
         apiResponse.setErrorMessage(errorCode.getMessage());
         return ResponseEntity.status(errorCode.getStatusCode()).body(apiResponse);
     }
+
+        @ExceptionHandler(value = MissingRequestCookieException.class)
+        public ResponseEntity<ApiResponse<Void>> handleMissingCookie(MissingRequestCookieException e) {
+                if ("refresh_token".equals(e.getCookieName())) {
+                        ErrorCode error = ErrorCode.INVALID_TOKEN;
+                        return ResponseEntity
+                                        .status(error.getStatusCode())
+                                        .body(new ApiResponse<>(error.getMessage(), error.getCode()));
+                }
+
+                ErrorCode error = ErrorCode.INVALID_PARAMETER;
+                return ResponseEntity
+                                .status(error.getStatusCode())
+                                .body(new ApiResponse<>(error.getMessage(), error.getCode()));
+        }
 
     @ExceptionHandler(value = RuntimeException.class)
     public ResponseEntity<ApiResponse<Void>> handleRuntimeException(RuntimeException e) {

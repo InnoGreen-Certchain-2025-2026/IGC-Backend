@@ -54,6 +54,8 @@ public class SecurityConfig {
             "/swagger-ui/**",
             "/v3/api-docs/**",
 
+            "/api/certificates/verify/file",
+
     };
 
     @Bean

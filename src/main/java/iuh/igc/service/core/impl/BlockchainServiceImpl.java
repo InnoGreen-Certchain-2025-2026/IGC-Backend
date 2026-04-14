@@ -47,6 +47,9 @@ public class BlockchainServiceImpl implements BlockchainService {
     @Value("${blockchain.admin-private-key}")
     private String privateKey;
 
+    @Value("${security.web3.x-header-secret}")
+    private String web3HeaderSecret;
+
     private Web3j web3j;
     private Credentials credentials;
     private StaticGasProvider gasProvider;
@@ -56,12 +59,19 @@ public class BlockchainServiceImpl implements BlockchainService {
     public void init() {
         log.info("🔗 Initializing Blockchain connection...");
 
-        web3j = Web3j.build(new HttpService(rpcUrl));
+        String resolvedRpcUrl = normalizeRpcUrl(rpcUrl);
+        HttpService httpService = new HttpService(resolvedRpcUrl);
+        httpService.addHeader("X-Header-Secret", web3HeaderSecret);
+        web3j = Web3j.build(httpService);
         credentials = Credentials.create(privateKey);
         gasProvider = new StaticGasProvider(
                 BigInteger.valueOf(1_000_000_000L),
                 BigInteger.valueOf(6_721_975L)
         );
+
+        if (!resolvedRpcUrl.equals(rpcUrl)) {
+            log.warn("Normalized blockchain rpc-url from '{}' to '{}'", rpcUrl, resolvedRpcUrl);
+        }
 
         try {
             String clientVersion = web3j.web3ClientVersion().send().getWeb3ClientVersion();
@@ -72,10 +82,30 @@ public class BlockchainServiceImpl implements BlockchainService {
             log.info("Admin Address: {}", credentials.getAddress());
             log.info("Current Block: {}", blockNumber);
         } catch (Exception e) {
-            log.error("❌ Failed to connect to blockchain", e);
+            log.error("❌ Failed to connect to blockchain. rpcUrl={} (Dockploy RPC proxy usually uses http://rpc-proxy:8548)", resolvedRpcUrl, e);
         }
     }
 
+    private String normalizeRpcUrl(String rawRpcUrl) {
+        if (rawRpcUrl == null) {
+            throw new IllegalArgumentException("blockchain.rpc-url must not be null");
+        }
+
+        String value = rawRpcUrl.trim();
+        if (value.isEmpty()) {
+            throw new IllegalArgumentException("blockchain.rpc-url must not be blank");
+        }
+
+        if (value.startsWith("//")) {
+            return "http:" + value;
+        }
+
+        if (!value.startsWith("http://") && !value.startsWith("https://")) {
+            return "http://" + value;
+        }
+
+        return value;
+    }
     @Override
     public TransactionReceipt issueCertificate(String certificateId, String documentHash) {
         try {
@@ -149,10 +179,26 @@ public class BlockchainServiceImpl implements BlockchainService {
                     DefaultBlockParameterName.LATEST
             ).send();
 
+                if (response.hasError()) {
+                log.warn("Blockchain verify call returned error: {}", response.getError().getMessage());
+                return VerificationResultImpl.builder()
+                    .certificateId(certificateId)
+                    .isValid(false)
+                    .build();
+                }
+
             List<Type> results = FunctionReturnDecoder.decode(
                     response.getValue(),
                     function.getOutputParameters()
             );
+
+                if (results == null || results.size() < 4) {
+                log.warn("Blockchain verify call returned empty/invalid payload for certificateId={}", certificateId);
+                return VerificationResultImpl.builder()
+                    .certificateId(certificateId)
+                    .isValid(false)
+                    .build();
+                }
 
             String certId = (String) results.get(0).getValue();
             byte[] hashBytes = (byte[]) results.get(1).getValue();

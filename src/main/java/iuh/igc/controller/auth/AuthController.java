@@ -1,5 +1,6 @@
 package iuh.igc.controller.auth;
 
+import iuh.igc.advice.base.ErrorCode;
 import iuh.igc.dto.base.ApiResponse;
 import iuh.igc.dto.request.auth.LoginRequest;
 import iuh.igc.dto.request.auth.RegisterRequest;
@@ -80,8 +81,15 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public ResponseEntity<@NonNull ApiResponse<DefaultAuthResponse>> refreshSession(
-            @CookieValue(value = "refresh_token") String refreshToken
+                        @CookieValue(value = "refresh_token", required = false) String refreshToken
     ) {
+                if (refreshToken == null || refreshToken.isBlank()) {
+                        ErrorCode errorCode = ErrorCode.INVALID_TOKEN;
+                        return ResponseEntity
+                                        .status(errorCode.getStatusCode())
+                                        .body(new ApiResponse<>(errorCode.getMessage(), errorCode.getCode()));
+                }
+
         var authResultWrapper = authService.refreshSession(refreshToken);
         var payload = new DefaultAuthResponse(
                 authResultWrapper.userSessionResponse(),
