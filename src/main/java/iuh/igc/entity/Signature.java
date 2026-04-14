@@ -27,12 +27,14 @@ public class Signature {
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String hash;
 
     private boolean isActive;
 
     private LocalDateTime createdAt;
+
+    private String filePath;
 
 
 

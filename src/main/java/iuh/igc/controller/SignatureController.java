@@ -37,9 +37,10 @@ public class SignatureController {
     @PostMapping("/upload")
     public ApiResponse<Boolean> uploadSignature(
             @RequestParam Long orgId,
-            @RequestParam MultipartFile file
-    ){
-        signatureService.createSignature(orgId, file);
+            @RequestParam("originalFile") MultipartFile originalFile,
+            @RequestParam("croppedFile") MultipartFile croppedFile
+    ) {
+        signatureService.createSignature(orgId, originalFile, croppedFile);
         return new ApiResponse<>(true);
     }
 
@@ -48,7 +49,7 @@ public class SignatureController {
             @RequestParam Long orgId,
             @RequestParam MultipartFile file
     ){
-        if(signatureService.checkSignatureIsUsed(file, orgId)){
+        if(signatureService.isSignature(file)){
             return new ApiResponse<>(true);
         } else {
             return new ApiResponse<>(false);
