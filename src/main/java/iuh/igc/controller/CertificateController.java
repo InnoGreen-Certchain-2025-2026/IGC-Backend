@@ -2,6 +2,7 @@ package iuh.igc.controller;
 
 import iuh.igc.dto.base.ApiResponse;
 import iuh.igc.dto.request.core.CreateDraftRequest;
+import iuh.igc.dto.request.core.CertificateRequest;
 import iuh.igc.dto.request.core.SignCertificateRequest;
 import iuh.igc.dto.request.core.SignaturePosition;
 import iuh.igc.dto.response.core.CertificateDownloadResponse;
@@ -61,6 +62,21 @@ public class CertificateController {
     @GetMapping("/my-certificates")
     public ApiResponse<List<CertificateResponse>> getMyCertificates() {
         return new ApiResponse<>(certificateService.getAllCertificatesByStudentId());
+    }
+
+    @PostMapping(value = "/issue", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<CertificateResponse> issueCertificate(
+            @RequestPart("request") @Valid CertificateRequest request,
+            @RequestPart("userCertificate") MultipartFile userCertificate,
+            @RequestParam("certificatePassword") String certificatePassword,
+            @RequestParam("organizationId") Long organizationId
+    ) {
+        return new ApiResponse<>(certificateService.issueCertificate(
+                request,
+                organizationId,
+                userCertificate,
+                certificatePassword
+        ));
     }
 
     @PostMapping(value = "/{certificateId}/sign", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

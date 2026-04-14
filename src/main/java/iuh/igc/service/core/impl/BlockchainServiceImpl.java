@@ -80,8 +80,11 @@ public class BlockchainServiceImpl implements BlockchainService {
     public TransactionReceipt issueCertificate(String certificateId, String documentHash) {
         try {
             log.info("Issuing certificate: {}", certificateId);
+            log.debug("   Input hash parameter: {}", documentHash);
 
             byte[] hashBytes = hexStringToByteArray(documentHash);
+            log.debug("   Hash bytes length: {}", hashBytes.length);
+            log.debug("   Hash bytes hex: {}", bytesToHex(hashBytes));
 
             Function function = new Function(
                     "issueCertificate",
@@ -93,6 +96,7 @@ public class BlockchainServiceImpl implements BlockchainService {
             );
 
             String encodedFunction = FunctionEncoder.encode(function);
+            log.debug("   Encoded function: {}", encodedFunction);
 
             EthSendTransaction transactionResponse = web3j.ethSendRawTransaction(
                     createSignedTransaction(encodedFunction)

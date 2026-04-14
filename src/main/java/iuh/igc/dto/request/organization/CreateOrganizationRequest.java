@@ -71,7 +71,7 @@ public record CreateOrganizationRequest(
 
         @NotBlank(message = "SĐT liên hệ không được để trống")
         @Pattern(
-                regexp = "^\\+?[1-9]\\d{7,14}$",
+                regexp = "^\\+?[0-9]\\d{7,14}$",
                 message = "SĐT liên hệ không hợp lệ (khuyến nghị chuẩn E.164, vd: +84901234567)"
         )
         String contactPhone,

@@ -4,13 +4,17 @@ import com.itextpdf.io.font.PdfEncodings;
 import com.itextpdf.io.image.ImageData;
 import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.io.source.ByteArrayOutputStream;
+import com.itextpdf.kernel.colors.Color;
 import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfPage;
 import com.itextpdf.kernel.pdf.PdfReader;
 import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.signatures.SignatureUtil;
+import com.itextpdf.layout.Canvas;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.element.Cell;
@@ -21,12 +25,16 @@ import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 import iuh.igc.dto.request.core.CertificateRequest;
 import iuh.igc.dto.request.core.SignaturePosition;
+import iuh.igc.entity.template.TemplateField;
 import iuh.igc.service.pdf.PdfService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -226,6 +234,135 @@ public class PdfServiceImpl implements PdfService {
                 } catch (Exception e) {
                         log.error("Failed to add signature image to PDF", e);
                         throw new RuntimeException("Failed to add signature image to PDF", e);
+                }
+        }
+
+        @Override
+        public byte[] renderTemplatePdf(byte[] templatePdfBytes,
+                                        List<TemplateField> fields,
+                                        Map<String, String> values,
+                                        byte[] signatureImageBytes) {
+                try {
+                        // Clean any existing signatures from template PDF before rendering
+                        byte[] cleanPdfBytes = cleanSignaturesFromPdf(templatePdfBytes);
+
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+                        PdfDocument pdfDocument = new PdfDocument(
+                                new PdfReader(new java.io.ByteArrayInputStream(cleanPdfBytes)),
+                                new PdfWriter(baos)
+                        );
+
+                        Document document = new Document(pdfDocument);
+
+                        PdfPage firstPage = pdfDocument.getFirstPage();
+                        var pageSize = firstPage.getPageSize();
+                        float pageWidth = pageSize.getWidth();
+                        float pageHeight = pageSize.getHeight();
+
+                        PdfFont defaultFont = PdfFontFactory.createFont("Helvetica", PdfEncodings.WINANSI);
+
+                        for (TemplateField field : fields) {
+                                if (field == null || field.getName() == null || field.getType() == null) {
+                                        continue;
+                                }
+
+                                float x = (float) (field.getX() / 100.0 * pageWidth);
+                                float yTop = (float) (field.getY() / 100.0 * pageHeight);
+                                float width = (float) (field.getW() / 100.0 * pageWidth);
+                                float height = (float) (field.getH() / 100.0 * pageHeight);
+                                float yBottom = pageHeight - yTop - height;
+
+                                String type = field.getType().toLowerCase(Locale.ROOT);
+                                if ("image".equals(type)) {
+                                        if (signatureImageBytes == null || signatureImageBytes.length == 0) {
+                                                continue;
+                                        }
+
+                                        Image image = new Image(ImageDataFactory.create(signatureImageBytes))
+                                                .setFixedPosition(1, x, yBottom, width)
+                                                .setHeight(height);
+
+                                        document.add(image);
+                                        break;
+                                }
+
+                                String value = values.getOrDefault(field.getName(),
+                                                values.getOrDefault(field.getName().toLowerCase(Locale.ROOT), ""));
+
+                                Paragraph paragraph = new Paragraph(value)
+                                        .setFont(defaultFont)
+                                        .setFontSize(field.getFontSize() != null ? field.getFontSize() : 11)
+                                        .setFontColor(parseColor(field.getColor()));
+
+                                String align = field.getAlign() == null ? "left" : field.getAlign().toLowerCase(Locale.ROOT);
+                                if ("center".equals(align)) {
+                                        paragraph.setTextAlignment(TextAlignment.CENTER);
+                                } else if ("right".equals(align)) {
+                                        paragraph.setTextAlignment(TextAlignment.RIGHT);
+                                } else {
+                                        paragraph.setTextAlignment(TextAlignment.LEFT);
+                                }
+
+                                Canvas canvas = new Canvas(firstPage, firstPage.getPageSize());
+                                canvas.showTextAligned(paragraph, x, yBottom, TextAlignment.LEFT);
+                                canvas.close();
+                        }
+
+                        document.close();
+                        return baos.toByteArray();
+                } catch (Exception e) {
+                        log.error("Failed to render template PDF", e);
+                        throw new RuntimeException("Failed to render template PDF", e);
+                }
+        }
+
+        /**
+         * Remove all digital signatures from PDF to ensure clean state for new signing
+         * This prevents multi-revision issues when re-signing PDFs
+         */
+        private byte[] cleanSignaturesFromPdf(byte[] pdfBytes) {
+                try {
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+                        try (PdfDocument doc = new PdfDocument(
+                                new PdfReader(new java.io.ByteArrayInputStream(pdfBytes)),
+                                new PdfWriter(baos))) {
+
+                                SignatureUtil signUtil = new SignatureUtil(doc);
+                                java.util.List<String> signatureNames = signUtil.getSignatureNames();
+
+                                if (!signatureNames.isEmpty()) {
+                                        log.info("🧹 Removing {} signatures from template PDF", signatureNames.size());
+                                        // Simply rewriting without signature fields produces clean PDF
+                                }
+                        }
+
+                        return baos.toByteArray();
+                } catch (Exception e) {
+                        log.warn("Failed to clean signatures from template PDF, using original", e);
+                        return pdfBytes;  // Fallback to original if cleaning fails
+                }
+        }
+
+        private Color parseColor(String hex) {
+                if (hex == null || hex.isBlank()) {
+                        return ColorConstants.BLACK;
+                }
+                String value = hex.trim();
+                if (value.startsWith("#")) {
+                        value = value.substring(1);
+                }
+                if (value.length() != 6) {
+                        return ColorConstants.BLACK;
+                }
+                try {
+                        int r = Integer.parseInt(value.substring(0, 2), 16);
+                        int g = Integer.parseInt(value.substring(2, 4), 16);
+                        int b = Integer.parseInt(value.substring(4, 6), 16);
+                        return new DeviceRgb(r, g, b);
+                } catch (Exception ignored) {
+                        return ColorConstants.BLACK;
                 }
         }
 

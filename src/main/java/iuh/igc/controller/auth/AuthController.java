@@ -3,6 +3,7 @@ package iuh.igc.controller.auth;
 import iuh.igc.dto.base.ApiResponse;
 import iuh.igc.dto.request.auth.LoginRequest;
 import iuh.igc.dto.request.auth.RegisterRequest;
+import iuh.igc.dto.request.auth.SyncRequest;
 import iuh.igc.dto.request.user.UpdatePasswordRequest;
 import iuh.igc.dto.response.auth.DefaultAuthResponse;
 import iuh.igc.service.auth.AuthService;
@@ -27,6 +28,21 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     AuthService authService;
+
+    @PostMapping("/sync")
+    public ResponseEntity<@NonNull ApiResponse<DefaultAuthResponse>> sync(
+            @RequestBody @Valid SyncRequest syncRequest
+    ) {
+        var authResultWrapper = authService.syncUser(syncRequest);
+        var payload = new DefaultAuthResponse(
+                authResultWrapper.userSessionResponse(),
+                authResultWrapper.accessToken()
+        );
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .header(HttpHeaders.SET_COOKIE, authResultWrapper.refreshTokenCookie().toString())
+                .body(new ApiResponse<>(payload));
+    }
 
     @PostMapping("/register")
     public ApiResponse<Void> register(

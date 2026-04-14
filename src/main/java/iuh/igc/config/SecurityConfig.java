@@ -1,5 +1,6 @@
 package iuh.igc.config;
 
+import iuh.igc.config.auth.CognitoJwtAuthenticationConverter;
 import iuh.igc.config.auth.CustomAuthenticationEntryPoint;
 import iuh.igc.config.auth.SkipPathBearerTokenResolver;
 import lombok.AccessLevel;
@@ -11,6 +12,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
@@ -36,6 +38,7 @@ public class SecurityConfig {
             "/auth/logout",
             "/auth/register",
             "/auth/refresh",
+            "/auth/sync",
 
             // OTP
             "/otp/send",
@@ -57,7 +60,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(
             HttpSecurity httpSecurity,
             CustomAuthenticationEntryPoint customAuthenticationEntryPoint,
-            SkipPathBearerTokenResolver skipPathBearerTokenResolver
+            SkipPathBearerTokenResolver skipPathBearerTokenResolver,
+            CognitoJwtAuthenticationConverter cognitoJwtAuthenticationConverter,
+            JwtDecoder jwtDecoder
     ) throws Exception {
         httpSecurity
                 .authorizeHttpRequests(auth -> auth
@@ -68,7 +73,10 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(Customizer.withDefaults())
+                        .jwt(jwt -> jwt
+                                .decoder(jwtDecoder)
+                                .jwtAuthenticationConverter(cognitoJwtAuthenticationConverter)
+                        )
                         .authenticationEntryPoint(customAuthenticationEntryPoint)
                         .bearerTokenResolver(skipPathBearerTokenResolver)
                 )
