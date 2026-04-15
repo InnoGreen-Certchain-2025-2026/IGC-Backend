@@ -216,7 +216,7 @@ public class SignatureServiceImpl implements SignatureService {
     }
 
     @Transactional
-    public boolean createSignature(Long orgId, MultipartFile file) {
+    public boolean createSignature(Long orgId, MultipartFile file, MultipartFile croppedFile) {
         String hash;
         try {
             hash = hashService.hashBytes(file.getBytes());
@@ -244,23 +244,22 @@ public class SignatureServiceImpl implements SignatureService {
                     .createdAt(java.time.LocalDateTime.now())
                     .organization(organizationRepository.getReferenceById(orgId))
                     .build();
-            Signature oldSignature = signatureRepository.findByHash(hash);
+            Signature oldSignature = signatureRepository.findByOrganizationIdAndHash(orgId,hash);
             System.out.println("oldSignature: " + oldSignature);
+            System.out.println("newSignature: " + newSignature);
 
             if(oldSignature!= null){
-                if(newSignature.getHash().equals(oldSignature.getHash())){
-                    oldSignature.setActive(true);
-                    signatureRepository.save(oldSignature);
-                    return true;
-                }
+                oldSignature.setActive(true);
+                signatureRepository.save(oldSignature);
+                return true;
             }
 
             //Lưu file lên S3
             String key = "signatures/" + orgId + "/" + hash + ".png";
-            s3Service.uploadFile(file, key, false, 5 * 1024 * 1024L);
+            s3Service.uploadFile(croppedFile, key, false, 5 * 1024 * 1024L);
 
+            newSignature.setFilePath(key);
             signatureRepository.save(newSignature);
-
 
             return true;
         } catch (Exception e) {
@@ -281,6 +280,24 @@ public class SignatureServiceImpl implements SignatureService {
             String hash = hashService.hashBytes(file.getBytes());
             return signatureRepository.existsByOrganizationIdAndHash(orgId, hash);
 
+        } catch (IOException e) {
+            throw new RuntimeException("Error processing file", e);
+        }
+    }
+
+    //Check if the signature is active (not deactivated by new upload)
+    public boolean checkSignatureIsActive(MultipartFile file, Long orgId) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("File is required");
+        }
+        if (!isSignature(file)) {
+            throw new IllegalArgumentException("Uploaded file is not a valid signature");
+        }
+
+        try {
+            String hash = hashService.hashBytes(file.getBytes());
+            Signature signature = signatureRepository.findByOrganizationIdAndHash(orgId, hash);
+            return signature != null && signature.isActive();
         } catch (IOException e) {
             throw new RuntimeException("Error processing file", e);
         }

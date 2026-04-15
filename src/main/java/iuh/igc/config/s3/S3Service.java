@@ -164,6 +164,16 @@ public class S3Service {
         }
     }
 
+    public void uploadBytes(byte[] bytes, String key) {
+        PutObjectRequest request = PutObjectRequest.builder()
+                .bucket(awsBucketName)
+                .key(key)
+                .contentType("image/png")
+                .build();
+
+        s3Client.putObject(request, RequestBody.fromBytes(bytes));
+    }
+
 
 
 }
