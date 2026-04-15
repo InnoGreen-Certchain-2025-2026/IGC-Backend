@@ -14,6 +14,14 @@ public interface CertificateService {
     @Transactional
     CertificateResponse issueCertificate(CertificateRequest request, Long organizationId);
 
+    @Transactional
+    CertificateResponse issueCertificate(
+            CertificateRequest request,
+            Long organizationId,
+            MultipartFile userCertificate,
+            String certificatePassword
+    );
+
     VerifyResponse verifyCertificate(String certificateId);
 
     VerifyResponse verifyCertificateByFile(MultipartFile pdfFile);
@@ -30,6 +38,10 @@ public interface CertificateService {
     List<CertificateResponse> getAllCertificates();
 
     List<CertificateResponse> getAllCertificatesByStudentId();
+
+    List<CertificateResponse> getSignedCertificates();
+
+    List<CertificateResponse> getRevokedCertificates();
 
     String generateClaimCode(String organizationCode);
 

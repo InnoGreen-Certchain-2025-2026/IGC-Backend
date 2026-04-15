@@ -22,12 +22,36 @@ import java.time.LocalDate;
 @Builder
 public class User extends BaseEntity {
 
+    /**
+     * =============================================
+     * THÔNG TIN ĐỊNH DANH
+     * =============================================
+     **/
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
     @Column(unique = true)
     String email;
+
+    @Column(nullable = false)
+    String hashedPassword;
+
+    @Column(name = "cognito_sub", unique = true)
+    String cognitoSub;
+
+    /**
+     * =============================================
+     * THÔNG TIN CHUNG
+     * =============================================
+     **/
+
+    // Keep the column nullable at the database level so schema auto-update
+    // can add it to an existing populated table without failing startup.
+    // Request validation still requires this field for newly created users.
+    @Column(unique = true)
+    String citizenIdNumber;
 
     @Column(nullable = false)
     String name;
@@ -46,8 +70,4 @@ public class User extends BaseEntity {
 
     @Column(nullable = true, name = "avatar_url")
     String avatarUrl;
-
-    @Column(nullable = false)
-    String hashedPassword;
-
 }

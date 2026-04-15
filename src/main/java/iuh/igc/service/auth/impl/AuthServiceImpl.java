@@ -2,7 +2,9 @@ package iuh.igc.service.auth.impl;
 
 import iuh.igc.dto.request.auth.LoginRequest;
 import iuh.igc.dto.request.auth.RegisterRequest;
+import iuh.igc.dto.request.auth.SyncRequest;
 import iuh.igc.dto.request.user.UpdatePasswordRequest;
+import iuh.igc.entity.constant.Gender;
 import iuh.igc.dto.response.user.UserSessionResponse;
 import iuh.igc.entity.User;
 import iuh.igc.repository.UserRepository;
@@ -18,6 +20,8 @@ import lombok.experimental.NonFinal;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseCookie;
+import java.time.LocalDate;
+import java.util.UUID;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -74,6 +78,7 @@ public class AuthServiceImpl implements AuthService {
                 .builder()
                 .email(request.email().toLowerCase())
                 .name(request.name())
+                .citizenIdNumber(request.citizenIdNumber())
                 .phoneNumber(request.phoneNumber())
                 .address(request.address())
                 .dob(request.dob())
@@ -82,6 +87,31 @@ public class AuthServiceImpl implements AuthService {
                 .build();
 
         userRepository.save(user);
+    }
+
+    @Override
+    @Transactional
+    public AuthResultWrapper syncUser(SyncRequest request) {
+        // Find existing user by cognitoSub (already synced) or by email (registered locally first)
+        User user = userRepository.findByCognitoSub(request.getCognitoSub())
+                .orElseGet(() -> userRepository.findByEmail(request.getEmail().toLowerCase())
+                        .orElseGet(() -> User.builder()
+                                .email(request.getEmail().toLowerCase())
+                                .name(request.getName())
+                                .phoneNumber("0000000000")
+                                .address("Unknown")
+                                .dob(LocalDate.of(2000, 1, 1))
+                                .gender(Gender.OTHER)
+                                .hashedPassword(passwordEncoder.encode("COGNITO_" + UUID.randomUUID()))
+                                .build()));
+
+        // Ensure cognitoSub is mapped
+        if (user.getCognitoSub() == null || !user.getCognitoSub().equals(request.getCognitoSub())) {
+            user.setCognitoSub(request.getCognitoSub());
+        }
+        userRepository.save(user);
+
+        return buildAuthResultWrapper(user);
     }
 
     @Override
@@ -132,7 +162,7 @@ public class AuthServiceImpl implements AuthService {
             throw new DataIntegrityViolationException("Mật khẩu hiện tại không đúng");
 
         String newPassword = updatePasswordRequest.newPassword();
-        String confirmedNewPassword = updatePasswordRequest.newPassword();
+        String confirmedNewPassword = updatePasswordRequest.confirmedNewPassword();
 
 
         if (!newPassword.equalsIgnoreCase(confirmedNewPassword))
@@ -171,6 +201,7 @@ public class AuthServiceImpl implements AuthService {
                 .email(user.getEmail())
                 .name(user.getName())
                 .avatarUrl(user.getAvatarUrl())
+                .citizenIdNumber(user.getCitizenIdNumber())
                 .build();
 
         return new AuthResultWrapper(

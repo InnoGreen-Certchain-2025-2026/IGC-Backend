@@ -1,7 +1,7 @@
 package iuh.igc.controller;
 
 import iuh.igc.dto.base.ApiResponse;
-import iuh.igc.dto.request.core.CreateDraftRequest;
+import iuh.igc.dto.request.core.CertificateRequest;
 import iuh.igc.dto.request.core.SignCertificateRequest;
 import iuh.igc.dto.request.core.SignaturePosition;
 import iuh.igc.dto.response.core.CertificateDownloadResponse;
@@ -9,7 +9,6 @@ import iuh.igc.dto.response.core.CertificateResponse;
 import iuh.igc.dto.response.core.VerifyResponse;
 import iuh.igc.service.core.CertificateService;
 import iuh.igc.service.core.ClaimService;
-import iuh.igc.service.core.DraftCertificateService;
 import iuh.igc.service.core.SigningService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -30,37 +29,38 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class CertificateController {
 
-    DraftCertificateService draftCertificateService;
     SigningService signingService;
     ClaimService claimService;
     CertificateService certificateService;
 
-    @PostMapping("/draft")
-    public ApiResponse<CertificateResponse> createDraftCertificate(
-            @Valid @RequestBody CreateDraftRequest request
-    ) {
-        log.info("Create draft certificate request: {}", request.certificateId());
-        return new ApiResponse<>(draftCertificateService.createDraft(request));
-    }
-
-    @GetMapping("/drafts")
-    public ApiResponse<List<CertificateResponse>> getDraftCertificates() {
-        return new ApiResponse<>(draftCertificateService.getDraftCertificates());
-    }
-
     @GetMapping("/signed")
     public ApiResponse<List<CertificateResponse>> getSignedCertificates() {
-        return new ApiResponse<>(draftCertificateService.getSignedCertificates());
+        return new ApiResponse<>(certificateService.getSignedCertificates());
     }
 
     @GetMapping("/revoked")
     public ApiResponse<List<CertificateResponse>> getRevokedCertificates() {
-        return new ApiResponse<>(draftCertificateService.getRevokedCertificates());
+        return new ApiResponse<>(certificateService.getRevokedCertificates());
     }
 
     @GetMapping("/my-certificates")
     public ApiResponse<List<CertificateResponse>> getMyCertificates() {
         return new ApiResponse<>(certificateService.getAllCertificatesByStudentId());
+    }
+
+    @PostMapping(value = "/issue", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<CertificateResponse> issueCertificate(
+            @RequestPart("request") @Valid CertificateRequest request,
+            @RequestPart("userCertificate") MultipartFile userCertificate,
+            @RequestParam("certificatePassword") String certificatePassword,
+            @RequestParam("organizationId") Long organizationId
+    ) {
+        return new ApiResponse<>(certificateService.issueCertificate(
+                request,
+                organizationId,
+                userCertificate,
+                certificatePassword
+        ));
     }
 
     @PostMapping(value = "/{certificateId}/sign", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -106,7 +106,7 @@ public class CertificateController {
     public ApiResponse<CertificateResponse> reissueCertificate(
             @PathVariable String certificateId
     ) {
-        return new ApiResponse<>(draftCertificateService.reissueCertificate(certificateId));
+        return new ApiResponse<>(certificateService.reactivateCertificate(certificateId));
     }
 
     @PostMapping("/claim/{claimCode}")

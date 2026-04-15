@@ -1,5 +1,6 @@
 package iuh.igc.config;
 
+import iuh.igc.config.auth.CognitoJwtAuthenticationConverter;
 import iuh.igc.config.auth.CustomAuthenticationEntryPoint;
 import iuh.igc.config.auth.SkipPathBearerTokenResolver;
 import lombok.AccessLevel;
@@ -11,6 +12,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
@@ -25,75 +27,86 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class SecurityConfig {
 
-    @Value("${security.cors.allowed-origins}")
-    @NonFinal
-    String allowedOrigins;
+        @Value("${security.cors.allowed-origins}")
+        @NonFinal
+        String allowedOrigins;
 
-    static final String[] WHITELIST = {
+        static final String[] WHITELIST = {
 
-            // Authentication
-            "/auth/login",
-            "/auth/logout",
-            "/auth/register",
-            "/auth/refresh",
+                        // Authentication
+                        "/auth/login",
+                        "/auth/logout",
+                        "/auth/register",
+                        "/auth/refresh",
+                        "/auth/sync",
 
-            // OTP
-            "/otp/send",
-            "/otp/verify",
+                        // OTP
+                        "/otp/send",
+                        "/otp/verify",
 
-            // Health check
-            "/actuator/health",
+                        // Contact
+                        "/contact",
 
-            // Upload
-            "/api/certificates/upload",
+                        // Health check
+                        "/actuator/health",
 
-            "/v3/api-docs",
-            "/swagger-ui"
+                        // Upload
+                        "/api/certificates/upload",
 
-    };
+                        // API DOCS
+                        "/swagger-ui/**",
+                        "/v3/api-docs/**",
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(
-            HttpSecurity httpSecurity,
-            CustomAuthenticationEntryPoint customAuthenticationEntryPoint,
-            SkipPathBearerTokenResolver skipPathBearerTokenResolver
-    ) throws Exception {
-        httpSecurity
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(WHITELIST).permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/certificates/claim/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/certificates/*/verify").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/certificates/verify/file").permitAll()
-                        .anyRequest().authenticated()
-                )
-                .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(Customizer.withDefaults())
-                        .authenticationEntryPoint(customAuthenticationEntryPoint)
-                        .bearerTokenResolver(skipPathBearerTokenResolver)
-                )
-                .cors(Customizer.withDefaults())
-                .csrf(AbstractHttpConfigurer::disable)
-                .formLogin(AbstractHttpConfigurer::disable)
-                .httpBasic(AbstractHttpConfigurer::disable)
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                );
+                        "/api/certificates/verify/file",
 
-        return httpSecurity.build();
-    }
+        };
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
+        @Bean
+        public SecurityFilterChain securityFilterChain(
+                        HttpSecurity httpSecurity,
+                        CustomAuthenticationEntryPoint customAuthenticationEntryPoint,
+                        SkipPathBearerTokenResolver skipPathBearerTokenResolver,
+                        CognitoJwtAuthenticationConverter cognitoJwtAuthenticationConverter,
+                        JwtDecoder jwtDecoder) throws Exception {
+                httpSecurity
+                                .authorizeHttpRequests(auth -> auth
+                                                .requestMatchers(WHITELIST).permitAll()
+                                                .requestMatchers(HttpMethod.GET, "/api/certificates/claim/**")
+                                                .permitAll()
+                                                .requestMatchers(HttpMethod.GET, "/api/certificates/*/verify")
+                                                .permitAll()
+                                                .requestMatchers(HttpMethod.POST, "/api/certificates/verify/file")
+                                                .permitAll()
+                                                .anyRequest().authenticated())
+                                .oauth2ResourceServer(oauth2 -> oauth2
+                                                .jwt(jwt -> jwt
+                                                                .decoder(jwtDecoder)
+                                                                .jwtAuthenticationConverter(
+                                                                                cognitoJwtAuthenticationConverter))
+                                                .authenticationEntryPoint(customAuthenticationEntryPoint)
+                                                .bearerTokenResolver(skipPathBearerTokenResolver))
+                                .cors(Customizer.withDefaults())
+                                .csrf(AbstractHttpConfigurer::disable)
+                                .formLogin(AbstractHttpConfigurer::disable)
+                                .httpBasic(AbstractHttpConfigurer::disable)
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        config.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(true);
+                return httpSecurity.build();
+        }
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-        return source;
-    }
+        @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
+                CorsConfiguration config = new CorsConfiguration();
+
+                config.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
+                config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+                config.setAllowedHeaders(List.of("*"));
+                config.setAllowCredentials(true);
+
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+                source.registerCorsConfiguration("/**", config);
+                return source;
+        }
 
 }

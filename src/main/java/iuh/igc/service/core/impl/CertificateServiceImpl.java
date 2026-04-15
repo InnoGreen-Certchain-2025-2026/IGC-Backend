@@ -62,6 +62,16 @@ public class CertificateServiceImpl implements CertificateService {
     @Override
     @Transactional
     public CertificateResponse issueCertificate(CertificateRequest request, Long organizationId) {
+        throw new UnsupportedOperationException("Use multipart issueCertificate(request, orgId, userCertificate, certificatePassword) to sign with user certificate");
+        }
+
+        @Override
+        @Transactional
+        public CertificateResponse issueCertificate(
+            CertificateRequest request,
+            Long organizationId,
+            MultipartFile userCertificate,
+            String certificatePassword) {
         User user = currentUserProvider.get();
 
         Organization organization = organizationRepository
@@ -78,6 +88,8 @@ public class CertificateServiceImpl implements CertificateService {
             throw new RuntimeException("Certificate ID already exists: " + request.certificateId());
         }
 
+        validateUserCertificateInput(userCertificate, certificatePassword);
+
 
 
         try {
@@ -87,8 +99,12 @@ public class CertificateServiceImpl implements CertificateService {
             log.info("✅ PDF generated - Size: {} bytes", unsignedPdf.length);
 
             // ========== STEP 2: Digital Signature ==========
-            log.info("✍️ Step 2: Signing PDF with digital signature...");
-            byte[] signedPdf = signatureService.signPdf(unsignedPdf, request.certificateId());
+            log.info("✍️ Step 2: Signing PDF with user certificate...");
+            byte[] signedPdf = signatureService.signPdfWithUserCertificate(
+                    unsignedPdf,
+                    userCertificate.getBytes(),
+                    certificatePassword
+            );
             log.info("✅ PDF signed - Size: {} bytes", signedPdf.length);
 
             // ========== STEP 3: Hash Signed PDF ==========
@@ -149,7 +165,7 @@ public class CertificateServiceImpl implements CertificateService {
                     .pdfSizeBytes((long) signedPdf.length)
                     .signedPdfHash(signedPdfHash)
                     .signatureTimestamp(LocalDateTime.now())
-                    .signerName(organization.getName())
+                    .signerName(user.getName())
                     .isValid(true)
                     .status(CertificateStatus.SIGNED)
                     .claimCode(generateClaimCode(organization.getCode()))
@@ -207,6 +223,21 @@ public class CertificateServiceImpl implements CertificateService {
         } catch (Exception e) {
             log.error("❌ Failed to issue certificate", e);
             throw new RuntimeException("Failed to issue certificate: " + e.getMessage(), e);
+        }
+    }
+
+    private void validateUserCertificateInput(MultipartFile userCertificate, String certificatePassword) {
+        if (userCertificate == null || userCertificate.isEmpty()) {
+            throw new IllegalArgumentException("User certificate is required");
+        }
+
+        if (certificatePassword == null || certificatePassword.isBlank()) {
+            throw new IllegalArgumentException("Certificate password is required");
+        }
+
+        String certName = userCertificate.getOriginalFilename();
+        if (certName == null || !(certName.toLowerCase().endsWith(".p12") || certName.toLowerCase().endsWith(".pfx"))) {
+            throw new IllegalArgumentException("User certificate must be a .p12 or .pfx file");
         }
     }
 
@@ -298,15 +329,17 @@ public class CertificateServiceImpl implements CertificateService {
             boolean signatureValid = signatureService.verifyPdfSignature(pdfBytes);
 
             if (!signatureValid) {
-                log.warn("⚠️ Digital signature verification failed");
+                log.warn("⚠️ Digital signature verification failed, but hash/blockchain verification passed");
                 return VerifyResponse.builder()
-                        .exists(true)
-                        .valid(false)
-                        .certificateId(certificateId)
-                        .studentName(dbCert.getStudentName())
-                        .issuer(dbCert.getIssuer())
-                        .message("Digital signature is invalid or missing")
-                        .build();
+                    .exists(true)
+                    .valid(true)
+                    .certificateId(dbCert.getCertificateId())
+                    .studentName(dbCert.getStudentName())
+                    .issuer(dbCert.getIssuer())
+                    .issueTimestamp(blockchainResult.getIssueTimestamp())
+                    .documentHash(downloadedPdfHash)
+                    .message("Certificate hash is valid on database/blockchain, but digital signature could not be fully verified")
+                    .build();
             }
 
             log.info("✅ Digital signature verified");
@@ -443,16 +476,17 @@ public class CertificateServiceImpl implements CertificateService {
             boolean signatureValid = signatureService.verifyPdfSignature(pdfBytes);
 
             if (!signatureValid) {
-                log.warn("⚠️ Digital signature verification failed");
+                log.warn("⚠️ Digital signature verification failed, but hash/blockchain verification passed");
                 return VerifyResponse.builder()
-                        .exists(true)
-                        .valid(false)
-                        .certificateId(dbCert.getCertificateId())
-                        .studentName(dbCert.getStudentName())
-                        .issuer(dbCert.getIssuer())
-                        .documentHash(uploadedPdfHash)
-                        .message("Digital signature is INVALID or MISSING")
-                        .build();
+                    .exists(true)
+                    .valid(true)
+                    .certificateId(dbCert.getCertificateId())
+                    .studentName(dbCert.getStudentName())
+                    .issuer(dbCert.getIssuer())
+                    .issueTimestamp(blockchainResult.getIssueTimestamp())
+                    .documentHash(uploadedPdfHash)
+                    .message("Certificate hash is valid on database/blockchain, but digital signature could not be fully verified")
+                    .build();
             }
 
             log.info("✅ Digital signature verified");
@@ -651,6 +685,22 @@ public class CertificateServiceImpl implements CertificateService {
         return certificateRepository.findCertificateByStudentId(user.getId()).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<CertificateResponse> getSignedCertificates() {
+        return certificateRepository.findByStatus(CertificateStatus.SIGNED)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    @Override
+    public List<CertificateResponse> getRevokedCertificates() {
+        return certificateRepository.findByStatus(CertificateStatus.REVOKED)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
     }
 
     @Override
