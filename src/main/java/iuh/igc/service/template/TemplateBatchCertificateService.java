@@ -5,6 +5,7 @@ import iuh.igc.dto.response.template.TemplateBatchProgressResponse;
 import iuh.igc.dto.response.template.TemplateBatchRowErrorResponse;
 import iuh.igc.dto.response.template.TemplateBatchStartResponse;
 import iuh.igc.entity.Certificate;
+import iuh.igc.entity.Signature;
 import iuh.igc.entity.User;
 import iuh.igc.entity.constant.CertificateStatus;
 import iuh.igc.entity.constant.OrganizationRole;
@@ -14,6 +15,7 @@ import iuh.igc.entity.template.TemplateField;
 import iuh.igc.repository.CertificateRepository;
 import iuh.igc.repository.OrganizationMemberRepository;
 import iuh.igc.repository.OrganizationRepository;
+import iuh.igc.repository.SignatureRepository;
 import iuh.igc.service.core.BlockchainService;
 import iuh.igc.service.pdf.DigitalSignatureService;
 import iuh.igc.service.pdf.HashService;
@@ -79,6 +81,7 @@ public class TemplateBatchCertificateService {
     final CertificateRepository certificateRepository;
     final OrganizationRepository organizationRepository;
     final OrganizationMemberRepository organizationMemberRepository;
+    final SignatureRepository signatureRepository;
     final CurrentUserProvider currentUserProvider;
     final PdfService pdfService;
     final DigitalSignatureService digitalSignatureService;
@@ -94,12 +97,19 @@ public class TemplateBatchCertificateService {
     public TemplateBatchStartResponse startBatchGeneration(String templateId,
                                                            Long orgId,
                                                            MultipartFile excelFile,
-                                                           MultipartFile signatureImage,
                                                            MultipartFile userCertificate,
                                                            String certificatePassword) {
-        validateInput(orgId, excelFile, signatureImage, userCertificate, certificatePassword);
+        validateInput(orgId, excelFile, userCertificate, certificatePassword);
         validateOrganizationPermission(orgId);
         String operatorName = currentUserProvider.get().getName();
+
+        // Validate that organization has active signature
+        Signature activeSignature = signatureRepository.findByOrganizationIdAndIsActiveTrue(orgId);
+        if (activeSignature == null) {
+            throw new IllegalArgumentException("Organization does not have an active signature. Please upload one first.");
+        }
+
+        String signatureImageKey = resolveSignatureImageKey(activeSignature);
 
         String batchId = UUID.randomUUID().toString();
         BatchProgress progress = new BatchProgress(batchId);
@@ -107,7 +117,6 @@ public class TemplateBatchCertificateService {
 
         try {
             byte[] excelBytes = excelFile.getBytes();
-            byte[] signatureImageBytes = signatureImage.getBytes();
             byte[] userCertificateBytes = userCertificate.getBytes();
 
             CompletableFuture.runAsync(() -> processBatch(
@@ -115,7 +124,7 @@ public class TemplateBatchCertificateService {
                     templateId,
                     orgId,
                     excelBytes,
-                    signatureImageBytes,
+                    signatureImageKey,
                     userCertificateBytes,
                         certificatePassword,
                         operatorName
@@ -157,7 +166,7 @@ public class TemplateBatchCertificateService {
                               String templateId,
                               Long orgId,
                               byte[] excelBytes,
-                              byte[] signatureImageBytes,
+                              String signatureImageKey,
                               byte[] userCertificateBytes,
                               String certificatePassword,
                               String operatorName) {
@@ -170,6 +179,9 @@ public class TemplateBatchCertificateService {
             TemplateDocument template = templateService.getByIdForOrganization(templateId, orgId);
             Organization organization = organizationRepository.findById(orgId)
                     .orElseThrow(() -> new EntityNotFoundException("Organization not found"));
+
+            // Download signature image from S3
+            byte[] signatureImageBytes = s3Service.downloadFileAsBytes(signatureImageKey);
 
             List<TemplateField> fields = Optional.ofNullable(template.getFields()).orElseGet(ArrayList::new);
             if (fields.isEmpty()) {
@@ -323,7 +335,6 @@ public class TemplateBatchCertificateService {
 
     private void validateInput(Long orgId,
                                MultipartFile excelFile,
-                               MultipartFile signatureImage,
                                MultipartFile userCertificate,
                                String certificatePassword) {
         if (orgId == null) {
@@ -342,13 +353,6 @@ public class TemplateBatchCertificateService {
             throw new IllegalArgumentException("Excel file must be .xlsx or .xls");
         }
 
-        if (signatureImage == null || signatureImage.isEmpty()) {
-            throw new IllegalArgumentException("Signature image is required");
-        }
-        if (signatureImage.getSize() > MAX_SIGNATURE_IMAGE_SIZE) {
-            throw new IllegalArgumentException("Signature image exceeds max size");
-        }
-
         if (userCertificate == null || userCertificate.isEmpty()) {
             throw new IllegalArgumentException("Digital certificate file is required");
         }
@@ -362,7 +366,7 @@ public class TemplateBatchCertificateService {
         }
 
         if (!StringUtils.hasText(certificatePassword)) {
-            throw new IllegalArgumentException("certificatePassword is required");
+            throw new IllegalArgumentException("Certificate password is required");
         }
     }
 
@@ -379,6 +383,34 @@ public class TemplateBatchCertificateService {
         if (!hasPermission) {
             throw new AccessDeniedException("You are not allowed to generate certificates for this organization");
         }
+    }
+
+    private String resolveSignatureImageKey(Signature activeSignature) {
+        if (activeSignature == null) {
+            throw new IllegalArgumentException("Organization does not have an active signature. Please upload one first.");
+        }
+
+        if (StringUtils.hasText(activeSignature.getImageS3Key())) {
+            return activeSignature.getImageS3Key();
+        }
+
+        if (StringUtils.hasText(activeSignature.getFilePath())) {
+            activeSignature.setImageS3Key(activeSignature.getFilePath());
+            if (!StringUtils.hasText(activeSignature.getImageS3Url())) {
+                activeSignature.setImageS3Url(s3Domain + "/" + activeSignature.getFilePath());
+            }
+            signatureRepository.save(activeSignature);
+            return activeSignature.getFilePath();
+        }
+
+        if (StringUtils.hasText(activeSignature.getImageS3Url())) {
+            String key = activeSignature.getImageS3Url().replace(s3Domain + "/", "");
+            activeSignature.setImageS3Key(key);
+            signatureRepository.save(activeSignature);
+            return key;
+        }
+
+        throw new IllegalArgumentException("Active signature is missing S3 key/url. Please re-upload the signature.");
     }
 
     private ExcelData readExcel(byte[] excelBytes) throws Exception {

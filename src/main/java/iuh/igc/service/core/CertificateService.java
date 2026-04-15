@@ -39,6 +39,10 @@ public interface CertificateService {
 
     List<CertificateResponse> getAllCertificatesByStudentId();
 
+    List<CertificateResponse> getSignedCertificates();
+
+    List<CertificateResponse> getRevokedCertificates();
+
     String generateClaimCode(String organizationCode);
 
     @Transactional

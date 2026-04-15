@@ -34,8 +34,13 @@ public class Signature {
 
     private LocalDateTime createdAt;
 
+    @Column(name = "file_path")
     private String filePath;
 
+    @Column(name = "image_s3_url")
+    private String imageS3Url;
 
+    @Column(name = "image_s3_key")
+    private String imageS3Key;
 
 }

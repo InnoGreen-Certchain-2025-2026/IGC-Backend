@@ -174,6 +174,22 @@ public class S3Service {
         s3Client.putObject(request, RequestBody.fromBytes(bytes));
     }
 
+    public String uploadBytesAndGetUrl(byte[] bytes, String key, String contentType) {
+        PutObjectRequest request = PutObjectRequest.builder()
+                .bucket(awsBucketName)
+                .key(key)
+                .contentType(contentType == null || contentType.isBlank() ? "image/png" : contentType)
+                .build();
 
+        s3Client.putObject(request, RequestBody.fromBytes(bytes));
+        return domain + "/" + key;
+    }
+
+    /**
+     * Get S3 domain for constructing URLs
+     */
+    public String getDomain() {
+        return domain;
+    }
 
 }

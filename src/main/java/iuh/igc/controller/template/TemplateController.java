@@ -126,14 +126,12 @@ public class TemplateController {
             @PathVariable String id,
             @RequestParam Long orgId,
             @RequestPart("excelFile") MultipartFile excelFile,
-            @RequestPart("signatureImage") MultipartFile signatureImage,
             @RequestPart("userCertificate") MultipartFile userCertificate,
             @RequestParam("certificatePassword") String certificatePassword) {
         TemplateBatchStartResponse response = templateBatchCertificateService.startBatchGeneration(
                 id,
                 orgId,
                 excelFile,
-                signatureImage,
                 userCertificate,
                 certificatePassword
         );

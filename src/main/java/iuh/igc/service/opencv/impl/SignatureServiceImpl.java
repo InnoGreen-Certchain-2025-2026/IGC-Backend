@@ -226,40 +226,34 @@ public class SignatureServiceImpl implements SignatureService {
         Signature oldSignatures = signatureRepository
                 .findByOrganizationIdAndIsActiveTrue(orgId);
 
-// 1. Nếu đã tồn tại → skip
-        if (oldSignatures != null && oldSignatures.getHash().equals(hash)) {
-            return true;
-        }
-
-// 2. Nếu có chữ ký cũ → deactivate
-        if (oldSignatures != null) {
-            oldSignatures.setActive(false);
-            signatureRepository.save(oldSignatures);
-        }
-
         try {
-            Signature newSignature = Signature.builder()
-                    .hash(hash)
-                    .isActive(true)
-                    .createdAt(java.time.LocalDateTime.now())
-                    .organization(organizationRepository.getReferenceById(orgId))
-                    .build();
-            Signature oldSignature = signatureRepository.findByOrganizationIdAndHash(orgId,hash);
-            System.out.println("oldSignature: " + oldSignature);
-            System.out.println("newSignature: " + newSignature);
-
-            if(oldSignature!= null){
-                oldSignature.setActive(true);
-                signatureRepository.save(oldSignature);
-                return true;
+            Signature signature = signatureRepository.findByOrganizationIdAndHash(orgId, hash);
+            if (signature == null) {
+                signature = Signature.builder()
+                        .hash(hash)
+                        .createdAt(java.time.LocalDateTime.now())
+                        .organization(organizationRepository.getReferenceById(orgId))
+                        .build();
             }
 
-            //Lưu file lên S3
-            String key = "signatures/" + orgId + "/" + hash + ".png";
-            s3Service.uploadFile(croppedFile, key, false, 5 * 1024 * 1024L);
+            if (oldSignatures != null && !oldSignatures.getHash().equals(hash)) {
+                oldSignatures.setActive(false);
+                signatureRepository.save(oldSignatures);
+            }
 
-            newSignature.setFilePath(key);
-            signatureRepository.save(newSignature);
+            String key = "signatures/" + orgId + "/" + hash + ".png";
+            byte[] croppedBytes = croppedFile.getBytes();
+            String s3Url = s3Service.uploadBytesAndGetUrl(
+                    croppedBytes,
+                    key,
+                    croppedFile.getContentType()
+            );
+
+            signature.setActive(true);
+            signature.setFilePath(key);
+            signature.setImageS3Url(s3Url);
+            signature.setImageS3Key(key);
+            signatureRepository.save(signature);
 
             return true;
         } catch (Exception e) {

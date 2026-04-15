@@ -688,6 +688,22 @@ public class CertificateServiceImpl implements CertificateService {
     }
 
     @Override
+    public List<CertificateResponse> getSignedCertificates() {
+        return certificateRepository.findByStatus(CertificateStatus.SIGNED)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    @Override
+    public List<CertificateResponse> getRevokedCertificates() {
+        return certificateRepository.findByStatus(CertificateStatus.REVOKED)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    @Override
     public CertificateDownloadResponse downloadCertificate(String certificateId) {
 
         User user = currentUserProvider.get();
