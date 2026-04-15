@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body style="margin:0; padding:0; font-family:Arial, sans-serif; background:#f4f6f8;">
+
+<div style="max-width:640px; margin:40px auto; background:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 4px 20px rgba(0,0,0,0.05);">
+
+    <!-- Header -->
+    <div style="background:#256f49; padding:20px; color:white;">
+        <h2 style="margin:0;">📩 Yêu cầu liên hệ mới</h2>
+    </div>
+
+    <!-- Content -->
+    <div style="padding:24px;">
+        <p><strong>Họ và tên:</strong> <span th:text="${fullName}"></span></p>
+        <p><strong>Email:</strong> <span th:text="${email}"></span></p>
+        <p><strong>Công ty:</strong> <span th:text="${company}"></span></p>
+
+        <p style="margin-top:16px;"><strong>Nội dung:</strong></p>
+        <div style="padding:12px; background:#f8fafc; border-radius:8px; white-space:pre-wrap;"
+             th:text="${description}">
+        </div>
+    </div>
+
+    <!-- Button -->
+    <div style="padding:0 24px 24px;">
+        <a th:href="'mailto:' + ${email}"
+           style="display:inline-block; padding:12px 20px; background:#fcb625; color:#000; text-decoration:none; border-radius:6px; font-weight:bold;">
+            Trả lời khách hàng
+        </a>
+    </div>
+
+    <!-- Footer -->
+    <div style="background:#f1f5f9; padding:16px; text-align:center; font-size:12px; color:#666;">
+        © 2026 IGC. All rights reserved.
+    </div>
+
+</div>
+
+</body>
+</html>
