@@ -56,6 +56,9 @@ public class SecurityConfig {
 
             "/api/certificates/verify/file",
 
+            // CONTACT
+            "/contact"
+
     };
 
     @Bean
