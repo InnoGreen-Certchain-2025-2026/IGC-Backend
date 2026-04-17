@@ -6,6 +6,7 @@ import iuh.igc.dto.request.template.CreateTemplateWithSchemaRequest;
 import iuh.igc.dto.request.template.SaveSchemaRequest;
 import iuh.igc.dto.response.template.TemplateBatchProgressResponse;
 import iuh.igc.dto.response.template.TemplateBatchStartResponse;
+import iuh.igc.dto.response.template.TemplateSchemaOptionsResponse;
 import iuh.igc.dto.response.template.TemplateResponse;
 import iuh.igc.entity.template.TemplateDocument;
 import iuh.igc.service.template.TemplateBatchCertificateService;
@@ -39,6 +40,11 @@ public class TemplateController {
                 .map(templateService::toResponse)
                 .toList();
         return new ApiResponse<>(data);
+    }
+
+    @GetMapping("/schema/options")
+    public ApiResponse<TemplateSchemaOptionsResponse> getSchemaOptions() {
+        return new ApiResponse<>(templateService.getSchemaOptions());
     }
 
     @GetMapping("/{id}")

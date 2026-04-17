@@ -75,6 +75,11 @@ public class SecurityConfig {
         httpSecurity
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(WHITELIST).permitAll()
+                        .requestMatchers("/api/templates/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/certificates/my-certificates").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/certificates/signed").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/certificates/revoked").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/organizations/brief").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/certificates/claim/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/certificates/*/verify").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/certificates/verify/file").permitAll()

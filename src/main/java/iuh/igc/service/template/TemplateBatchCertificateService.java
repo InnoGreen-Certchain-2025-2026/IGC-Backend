@@ -36,6 +36,9 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -101,7 +104,7 @@ public class TemplateBatchCertificateService {
                                                            String certificatePassword) {
         validateInput(orgId, excelFile, userCertificate, certificatePassword);
         validateOrganizationPermission(orgId);
-        String operatorName = currentUserProvider.get().getName();
+        String operatorName = resolveOperatorName();
 
         // Validate that organization has active signature
         Signature activeSignature = signatureRepository.findByOrganizationIdAndIsActiveTrue(orgId);
@@ -215,10 +218,12 @@ public class TemplateBatchCertificateService {
                         throw new IllegalArgumentException("certificateId already exists: " + certificateId);
                     }
 
+                    Map<String, String> renderValues = buildRenderValues(row);
+
                     byte[] unsignedPdf = pdfService.renderTemplatePdf(
                             templatePdfBytes,
                             fields,
-                            row,
+                            renderValues,
                             signatureImageBytes
                     );
                     log.debug("📋 Rendered unsigned PDF for {}: {} bytes", certificateId, unsignedPdf.length);
@@ -371,7 +376,11 @@ public class TemplateBatchCertificateService {
     }
 
     private void validateOrganizationPermission(Long orgId) {
-        User user = currentUserProvider.get();
+        User user = resolveCurrentUserOrNull();
+        if (user == null) {
+            return;
+        }
+
         Collection<OrganizationRole> allowedRoles = List.of(OrganizationRole.OWNER, OrganizationRole.MODERATOR);
 
         boolean hasPermission = organizationMemberRepository.existsByOrganization_IdAndUser_IdAndOrganizationRoleIn(
@@ -383,6 +392,32 @@ public class TemplateBatchCertificateService {
         if (!hasPermission) {
             throw new AccessDeniedException("You are not allowed to generate certificates for this organization");
         }
+    }
+
+    private String resolveOperatorName() {
+        User user = resolveCurrentUserOrNull();
+        return user == null ? "System" : user.getName();
+    }
+
+    private User resolveCurrentUserOrNull() {
+        if (!isAuthenticated()) {
+            return null;
+        }
+
+        try {
+            return currentUserProvider.get();
+        } catch (Exception e) {
+            log.warn("Cannot resolve current user from security context, fallback to anonymous template flow");
+            return null;
+        }
+    }
+
+    private boolean isAuthenticated() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication instanceof AnonymousAuthenticationToken) {
+            return false;
+        }
+        return authentication.isAuthenticated();
     }
 
     private String resolveSignatureImageKey(Signature activeSignature) {
@@ -531,6 +566,27 @@ public class TemplateBatchCertificateService {
             throw new IllegalArgumentException("Row " + rowNumber + " missing required value: " + key);
         }
         return value.trim();
+    }
+
+    private Map<String, String> buildRenderValues(Map<String, String> row) {
+        Map<String, String> renderValues = new HashMap<>();
+        if (row != null) {
+            renderValues.putAll(row);
+        }
+
+        String issueDate = optionalDate(renderValues.get("issuedate")) != null
+                ? optionalDate(renderValues.get("issuedate")).toString()
+                : LocalDate.now().toString();
+
+        if (!StringUtils.hasText(renderValues.get("date"))) {
+            renderValues.put("date", issueDate);
+        }
+
+        if (!StringUtils.hasText(renderValues.get("issuedate"))) {
+            renderValues.put("issuedate", issueDate);
+        }
+
+        return renderValues;
     }
 
     private String optionalString(String value) {

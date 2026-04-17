@@ -33,9 +33,26 @@ public record TemplateFieldRequest(
         @DecimalMax(value = "100.0", message = "h must be <= 100")
         Double h,
 
+        @Min(value = 6, message = "fontSize must be >= 6")
+        @Max(value = 72, message = "fontSize must be <= 72")
         Integer fontSize,
+
+        @Pattern(
+                regexp = "(?i)^\\s*$|^(helvetica|arial|sans-serif|sans|system-ui|helvetica-bold|arial-bold|sans-bold|times|times-roman|times new roman|serif|times-bold|times new roman bold|serif-bold|courier|monospace|mono|courier-bold|mono-bold)$",
+                message = "fontFamily is invalid"
+        )
         String fontFamily,
+
+        @Pattern(
+                regexp = "(?i)^\\s*$|^(left|center|right)$",
+                message = "align must be one of: left, center, right"
+        )
         String align,
+
+        @Pattern(
+                regexp = "(?i)^\\s*$|^#?[0-9a-f]{6}$",
+                message = "color must be a valid hex color, example: #1A2B3C"
+        )
         String color
 ) {
 }

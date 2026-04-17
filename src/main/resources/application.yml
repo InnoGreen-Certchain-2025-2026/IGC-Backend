@@ -106,4 +106,4 @@ springdoc:
     enabled: false
 
 contact:
-  recipient-email: "igcertchain@gmail.com"
+  recipient-email: ${CONTACT_RECIPIENT_EMAIL}

@@ -1,6 +1,7 @@
 package iuh.igc.service.template;
 
 import iuh.igc.dto.request.template.TemplateFieldRequest;
+import iuh.igc.dto.response.template.TemplateSchemaOptionsResponse;
 import iuh.igc.entity.template.TemplateDocument;
 import iuh.igc.entity.template.TemplateField;
 import iuh.igc.repository.TemplateRepository;
@@ -15,6 +16,9 @@ import iuh.igc.entity.User;
 import iuh.igc.entity.constant.OrganizationRole;
 import iuh.igc.repository.OrganizationMemberRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -43,6 +47,26 @@ import java.util.LinkedHashSet;
 public class TemplateService {
     private static final long MAX_TEMPLATE_FILE_SIZE = 20 * 1024 * 1024L;
     private static final String SIGNATURE_FIELD_NAME = "signature";
+    private static final int MIN_FONT_SIZE = 6;
+    private static final int MAX_FONT_SIZE = 72;
+    private static final int DEFAULT_FONT_SIZE = 11;
+    private static final List<String> SUPPORTED_FONT_FAMILIES = List.of(
+            "helvetica",
+            "helvetica-bold",
+            "times",
+            "times-bold",
+            "courier",
+            "courier-bold",
+            "arial",
+            "arial-bold",
+            "sans-serif",
+            "sans-bold",
+            "serif",
+            "serif-bold",
+            "monospace",
+            "mono-bold"
+    );
+    private static final List<String> SUPPORTED_ALIGNMENTS = List.of("left", "center", "right");
 
     final TemplateRepository templateRepository;
     final OrganizationMemberRepository organizationMemberRepository;
@@ -214,9 +238,23 @@ public class TemplateService {
         );
     }
 
+    public TemplateSchemaOptionsResponse getSchemaOptions() {
+        return new TemplateSchemaOptionsResponse(
+                SUPPORTED_FONT_FAMILIES,
+                SUPPORTED_ALIGNMENTS,
+                MIN_FONT_SIZE,
+                MAX_FONT_SIZE,
+                DEFAULT_FONT_SIZE
+        );
+    }
+
     private void validateOrganizationPermission(Long orgId) {
         if (orgId == null) {
             throw new IllegalArgumentException("orgId is required");
+        }
+
+        if (!isAuthenticated()) {
+            return;
         }
 
         User user = currentUserProvider.get();
@@ -231,6 +269,14 @@ public class TemplateService {
         if (!hasPermission) {
             throw new AccessDeniedException("You are not allowed to manage templates of this organization");
         }
+    }
+
+    private boolean isAuthenticated() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication instanceof AnonymousAuthenticationToken) {
+            return false;
+        }
+        return authentication.isAuthenticated();
     }
 
     private void validateTemplatePayload(String name, List<TemplateFieldRequest> fields) {
@@ -293,19 +339,44 @@ public class TemplateService {
                         .y(f.y())
                         .w(f.w())
                         .h(f.h())
-                        .fontSize(f.fontSize())
-                        .fontFamily(f.fontFamily())
-                        .align(f.align())
-                        .color(f.color())
+                        .fontSize(normalizeFontSize(f.fontSize()))
+                        .fontFamily(normalizeSimpleStyleValue(f.fontFamily()))
+                        .align(normalizeSimpleStyleValue(f.align()))
+                        .color(normalizeColor(f.color()))
                         .build())
                 .toList();
+    }
+
+    private Integer normalizeFontSize(Integer value) {
+        if (value == null) {
+            return DEFAULT_FONT_SIZE;
+        }
+        return Math.max(MIN_FONT_SIZE, Math.min(MAX_FONT_SIZE, value));
+    }
+
+    private String normalizeSimpleStyleValue(String value) {
+        if (!StringUtils.hasText(value)) {
+            return null;
+        }
+        return value.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private String normalizeColor(String value) {
+        if (!StringUtils.hasText(value)) {
+            return null;
+        }
+        String color = value.trim();
+        if (!color.startsWith("#")) {
+            color = "#" + color;
+        }
+        return color.toUpperCase(Locale.ROOT);
     }
 
     private String sampleValueForHeader(String header) {
         String normalized = header == null ? "" : header.trim().toLowerCase(Locale.ROOT);
         return switch (normalized) {
             case "certificateid" -> "CERT-2026-0001";
-            case "dateofbirth", "issuedate" -> "2000-01-15";
+            case "date", "dateofbirth", "issuedate" -> "2000-01-15";
             case "graduationyear" -> "2026";
             case "gpa" -> "3.50";
             case "certificatetype" -> "Chung chi";

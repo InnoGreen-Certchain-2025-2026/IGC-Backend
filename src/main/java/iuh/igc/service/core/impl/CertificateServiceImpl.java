@@ -27,6 +27,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -681,6 +684,10 @@ public class CertificateServiceImpl implements CertificateService {
 
     @Override
     public List<CertificateResponse> getAllCertificatesByStudentId() {
+        if (!isAuthenticated()) {
+            return List.of();
+        }
+
         User user = currentUserProvider.get();
         return certificateRepository.findCertificateByStudentId(user.getId()).stream()
                 .map(this::mapToResponse)
@@ -689,6 +696,10 @@ public class CertificateServiceImpl implements CertificateService {
 
     @Override
     public List<CertificateResponse> getSignedCertificates() {
+        if (!isAuthenticated()) {
+            return List.of();
+        }
+
         return certificateRepository.findByStatus(CertificateStatus.SIGNED)
                 .stream()
                 .map(this::mapToResponse)
@@ -697,6 +708,10 @@ public class CertificateServiceImpl implements CertificateService {
 
     @Override
     public List<CertificateResponse> getRevokedCertificates() {
+        if (!isAuthenticated()) {
+            return List.of();
+        }
+
         return certificateRepository.findByStatus(CertificateStatus.REVOKED)
                 .stream()
                 .map(this::mapToResponse)
@@ -724,5 +739,13 @@ public class CertificateServiceImpl implements CertificateService {
                 certificate.getPdfFilename(),
                 pdfBytes
         );
+    }
+
+    private boolean isAuthenticated() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication instanceof AnonymousAuthenticationToken) {
+            return false;
+        }
+        return authentication.isAuthenticated();
     }
 }

@@ -24,6 +24,7 @@ public class SkipPathBearerTokenResolver implements BearerTokenResolver {
             new SkipRule("/auth/logout", null),
             new SkipRule("/auth/register", null),
             new SkipRule("/auth/sync", null),
+            new SkipRule("/api/templates/**", null),
             new SkipRule("/contact", "POST"),
             new SkipRule("/contact/**", "POST"),
             new SkipRule("/api/contact", "POST"),

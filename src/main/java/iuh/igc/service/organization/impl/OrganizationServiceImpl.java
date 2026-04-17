@@ -24,7 +24,10 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -151,6 +154,10 @@ public class OrganizationServiceImpl implements OrganizationService {
     @Transactional(readOnly = true)
     @Override
     public List<OrganizationSummaryResponse> getUserBriefOrganizationList() {
+        if (!isAuthenticated()) {
+            return List.of();
+        }
+
         User user = currentUserProvider.get();
         Pageable pageable = PageRequest.of(0, 8);
 
@@ -172,6 +179,14 @@ public class OrganizationServiceImpl implements OrganizationService {
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy tổ chức"));
 
         return mapToOrganizationResponse(organization, user.getId());
+    }
+
+    private boolean isAuthenticated() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication instanceof AnonymousAuthenticationToken) {
+            return false;
+        }
+        return authentication.isAuthenticated();
     }
 
     /**

@@ -1,12 +1,14 @@
 package iuh.igc.service.pdf.impl;
 
 import com.itextpdf.io.font.PdfEncodings;
+import com.itextpdf.io.font.constants.StandardFonts;
 import com.itextpdf.io.image.ImageData;
 import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.io.source.ByteArrayOutputStream;
 import com.itextpdf.kernel.colors.Color;
 import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.kernel.colors.DeviceRgb;
+import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.kernel.pdf.PdfDocument;
@@ -260,7 +262,7 @@ public class PdfServiceImpl implements PdfService {
                         float pageWidth = pageSize.getWidth();
                         float pageHeight = pageSize.getHeight();
 
-                        PdfFont defaultFont = PdfFontFactory.createFont("Helvetica", PdfEncodings.WINANSI);
+                        PdfFont defaultFont = PdfFontFactory.createFont(StandardFonts.HELVETICA, PdfEncodings.WINANSI);
 
                         for (TemplateField field : fields) {
                                 if (field == null || field.getName() == null || field.getType() == null) {
@@ -284,15 +286,19 @@ public class PdfServiceImpl implements PdfService {
                                                 .setHeight(height);
 
                                         document.add(image);
-                                        break;
+                                        continue;
                                 }
 
                                 String value = values.getOrDefault(field.getName(),
                                                 values.getOrDefault(field.getName().toLowerCase(Locale.ROOT), ""));
 
+                                PdfFont fieldFont = resolveTemplateFieldFont(field.getFontFamily(), defaultFont);
+                                float fieldFontSize = normalizeTemplateFieldFontSize(field.getFontSize());
+
                                 Paragraph paragraph = new Paragraph(value)
-                                        .setFont(defaultFont)
-                                        .setFontSize(field.getFontSize() != null ? field.getFontSize() : 11)
+                                        .setFont(fieldFont)
+                                        .setFontSize(fieldFontSize)
+                                        .setMargin(0)
                                         .setFontColor(parseColor(field.getColor()));
 
                                 String align = field.getAlign() == null ? "left" : field.getAlign().toLowerCase(Locale.ROOT);
@@ -304,8 +310,9 @@ public class PdfServiceImpl implements PdfService {
                                         paragraph.setTextAlignment(TextAlignment.LEFT);
                                 }
 
-                                Canvas canvas = new Canvas(firstPage, firstPage.getPageSize());
-                                canvas.showTextAligned(paragraph, x, yBottom, TextAlignment.LEFT);
+                                Rectangle fieldBox = new Rectangle(x, yBottom, width, height);
+                                Canvas canvas = new Canvas(firstPage, fieldBox);
+                                canvas.add(paragraph);
                                 canvas.close();
                         }
 
@@ -364,6 +371,47 @@ public class PdfServiceImpl implements PdfService {
                 } catch (Exception ignored) {
                         return ColorConstants.BLACK;
                 }
+        }
+
+        private PdfFont resolveTemplateFieldFont(String fontFamily, PdfFont fallback) {
+                if (fontFamily == null || fontFamily.isBlank()) {
+                        return fallback;
+                }
+
+                String normalized = fontFamily.trim().toLowerCase(Locale.ROOT);
+                String standardFont = switch (normalized) {
+                        case "helvetica", "arial", "sans-serif", "sans", "system-ui" -> StandardFonts.HELVETICA;
+                        case "helvetica-bold", "arial-bold", "sans-bold" -> StandardFonts.HELVETICA_BOLD;
+                        case "times", "times-roman", "times new roman", "serif" -> StandardFonts.TIMES_ROMAN;
+                        case "times-bold", "times new roman bold", "serif-bold" -> StandardFonts.TIMES_BOLD;
+                        case "courier", "monospace", "mono" -> StandardFonts.COURIER;
+                        case "courier-bold", "mono-bold" -> StandardFonts.COURIER_BOLD;
+                        default -> null;
+                };
+
+                if (standardFont == null) {
+                        return fallback;
+                }
+
+                try {
+                        return PdfFontFactory.createFont(standardFont, PdfEncodings.WINANSI);
+                } catch (Exception e) {
+                        log.warn("Template field font '{}' is not supported, fallback to default", fontFamily);
+                        return fallback;
+                }
+        }
+
+        private float normalizeTemplateFieldFontSize(Integer fontSize) {
+                if (fontSize == null) {
+                        return 11f;
+                }
+                if (fontSize < 6) {
+                        return 6f;
+                }
+                if (fontSize > 72) {
+                        return 72f;
+                }
+                return fontSize.floatValue();
         }
 
 }
