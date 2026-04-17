@@ -57,7 +57,10 @@ public class SecurityConfig {
             "/api/certificates/verify/file",
 
             // CONTACT
-            "/contact"
+            "/contact",
+            "/contact/**",
+            "/api/contact",
+            "/api/contact/**"
 
     };
 
